@@ -102,7 +102,7 @@ public class Client {
 		in = new BufferedReader(new InputStreamReader(
 				socket.getInputStream()));
 		out = new PrintWriter(socket.getOutputStream(), true);
-		String broadcast="**********************************************************************************\n";
+		String broadcast="***";
 		// Process all messages from server, according to the protocol.
 		while (true) {
 			String line = in.readLine();
@@ -110,23 +110,21 @@ public class Client {
 				out.println(getName());
 			} else if (line.startsWith("NICKNAMEACCEPTED")) {
 				textField.setEditable(true);
-			} else if (line.startsWith("GAMESTART")){
+			} else if (line.startsWith("WATCHMODE")) {
+				textField.setEditable(false);
+				messageArea.append(broadcast+" You can't use chatting , only allow watching game "+broadcast+"\n");
+			}else if (line.startsWith("GAMESTART")){
 				out.println("GAMESTART");
-				messageArea.append(broadcast);
-				messageArea.append("GAME START! \n");
-				messageArea.append(broadcast);
+				messageArea.append(broadcast+" GAME START! "+broadcast+"\n");
 			} else if (line.startsWith("MESSAGE")) {
-				messageArea.append(line.substring(8) + "\n");
+				messageArea.append(line.substring(8)+"\n");
 			} else if (line.startsWith("BROADCAST")){
-				messageArea.append(broadcast);
-				messageArea.append(line.substring(10)+"\n");
-				messageArea.append(broadcast);
-			} else if (line.startsWith("SELECT_LOCATE")) {
-				messageArea.append(broadcast);
-				messageArea.append("please input location that you want to start (MAX 8X8) \n");
-				messageArea.append(broadcast);
-				line = in.readLine();
-
+				messageArea.append(broadcast+line.substring(10)+broadcast+"\n");
+		
+			} else if (line.startsWith("SELECT LOCATE AGAIN")) {
+				messageArea.append(broadcast+"you entered invalid value, try again"+broadcast+"\n");
+			} else if(line.startsWith("FIRSTLOCATIONACCEPTED")) {
+				messageArea.append(broadcast+"you entered location . please wait other clients"+broadcast+"\n");
 			}
 		}
 	}

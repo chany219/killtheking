@@ -10,7 +10,8 @@ public class Server {
 	private static final int PORT = 8888;
 	public static HashMap<String,PrintWriter>clients = new HashMap<String,PrintWriter>();
 	public static HashSet<PrintWriter>writers = new HashSet<PrintWriter>();
-	//role == 0 KING 1 SPY 2,3,4 CITIZEN
+	
+	//role == 0 KING 1 SPY 2,3,4 CITIZEN 10 observers
 	public static HashMap<String,Integer>role =new HashMap<String,Integer>(); 
 
 
@@ -34,7 +35,7 @@ public class Server {
 		private Socket socket;
 		private BufferedReader in;
 		private PrintWriter out;
-
+	
 	
 		public Handler(Socket socket){
 			this.socket = socket;
@@ -64,8 +65,8 @@ public class Server {
 				}
 				out.println("NICKNAMEACCEPTED");
 				writers.add(out);
-		
-			
+	
+				if(clients.size()<=5){
 				
 					Random random = new Random();
 					while(true) {
@@ -78,19 +79,26 @@ public class Server {
 							}
 						}
 					}
+				}
+				else  {
+					role.put(nickname, 10); // don't participate game, only watch
+				}
 					
-				
+		
 				for(PrintWriter writer : writers) {
-					writer.println("MESSAGE "+nickname+" has entered game. ("+clients.size()+"/5)");
+					writer.println("BROADCAST "+nickname+" has entered game. ("+clients.size()+"/5)");
 				}
 				// In while loop
 				// Before the game starts
 				// only can use chat
 				while(true) {
-					if(clients.size()==3) {
+					if(clients.size()==1) {
 						for(PrintWriter writer : writers){
 							writer.println("GAMESTART");
 						}
+					}
+					else if(clients.size()>5) {
+						out.println("WATCHMODE");
 					}
 					String input = in.readLine();
 					if(input.equals("GAMESTART")){
@@ -105,15 +113,37 @@ public class Server {
 				// when 5 clients has entered, game is start. 
 				int roleNum=role.get(nickname);
 				if(roleNum==0){
-					out.println("BROADCAST You are the King.");
+					out.println("BROADCAST  You are the King. ");
 				}
 				else if(roleNum==1){
-					out.println("BROADCAST You are the Spy.");
+					out.println("BROADCAST  You are the Spy. ");
 				}
 				else
-					out.println("BROADCAST You are the Citizen.");
+					out.println("BROADCAST  You are the Citizen. ");
+				//select first location of clients
+				out.println("BROADCAST Please input location that you want to start ex) 3,8 (MAX 7X7)");
+				while(true) {
+					String input=in.readLine();
+					if(input.charAt(1)==','&&Integer.parseInt(input.substring(0,1))<8&&Integer.parseInt(input.substring(2,3))<8) {
+						ProgressInfo.tempLocation[roleNum][0]=Integer.parseInt(input.substring(0,1));
+						ProgressInfo.tempLocation[roleNum][1]=Integer.parseInt(input.substring(2,3));
+						ProgressInfo.ready[roleNum]=true;
+						out.println("FIRSTLOCATIONACCEPTED");
+						break;
+					}
+					else {
+						out.println("SELECT LOCATE AGAIN");
+						
+					}
+				}
+				if(ProgressInfo.checkStart()) {
+					if(ProgressInfo.checkFirstLocation()) {
+						for(PrintWriter writer : writers){
+							writer.println("BROADCAST First location was decided");
+						}
+					}
+				}
 				
-				out.println("SELLECT_LOCATE");
 				while(true) {
 					
 					String input = in.readLine();
@@ -132,7 +162,7 @@ public class Server {
 			} finally {
 
 				for(PrintWriter writer : writers) {
-					writer.println("MESSAGE "+nickname+ "has left game.");
+					writer.println("BROADCAST "+nickname+ "has left game.");
 				}
 				if(out!=null){
 					writers.remove(out);
@@ -149,14 +179,6 @@ public class Server {
 		}
 
 	}
-
-
-
-
-
-
-
-
 
 
 
