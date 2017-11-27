@@ -10,7 +10,8 @@ import java.util.HashMap;
 
 public class ChatServer {
 
-	private static final int PORT = 9001;
+	private static final int PORT_CHAT = 9001;
+	private static final int PORT_BUTTON = 9002;
 
 	//I use HashMap in order to manage many print writers for all the clients.
 	//The key value is print writers, and value is print writer's ID.
@@ -19,24 +20,27 @@ public class ChatServer {
 
 	public static void main(String[] args) throws Exception {
 		System.out.println("The chat server is running.");
-		ServerSocket listener = new ServerSocket(PORT);
+		ServerSocket listener1 = new ServerSocket(PORT_CHAT);
+		ServerSocket listener2 = new ServerSocket(PORT_BUTTON);
 		try {
 			while (true) {
-				new Handler(listener.accept()).start();
+				new Handler_chatting(listener1.accept()).start();
+				new Handler_button(listener2.accept()).start();
 			}
 		} finally {
-			listener.close();
+			listener1.close();
+			listener2.close();
 		}
 	}
 
-	private static class Handler extends Thread {
+	private static class Handler_chatting extends Thread {
 		private String name;
 		private Socket socket;
 		private BufferedReader in;
 		private PrintWriter out;
 
-		
-		public Handler(Socket socket) {
+
+		public Handler_chatting(Socket socket) {
 			this.socket = socket;
 		}
 
@@ -73,7 +77,7 @@ public class ChatServer {
 				// socket's print writer to the set of all writers so
 				// this client can receive broadcast messages.
 				out.println("NAMEACCEPTED");
-				
+
 				//Store the print writer and id in the HashMap.
 				writers.put(out,name);
 
@@ -100,13 +104,13 @@ public class ChatServer {
 								String msg="";
 								for(int i=2;i<whisper.length;i++)
 									msg+=(whisper[i]+" ");
-								
+
 								//broadcast the whisper message only sending client and sent client
 								writer.println("MESSAGE "+"Whisper from <"+name+"> : "+msg);
 								out.println("MESSAGE "+"Whisper to <"+whisper[1]+"> : "+msg);
 								break;
 							}
-							
+
 						}         
 					}
 					else
@@ -132,6 +136,55 @@ public class ChatServer {
 				} catch (IOException e) {
 				}
 			}
+		}
+	}
+
+	public static class Handler_button extends Thread {
+		private Socket socket;
+		private BufferedReader in;
+		private PrintWriter out;
+		public static boolean ready=true;
+		public Handler_button(Socket socket) {
+			this.socket = socket;
+		}
+		public void run() {
+
+
+			try {
+
+				in = new BufferedReader(new InputStreamReader(
+						socket.getInputStream()));
+				out = new PrintWriter(socket.getOutputStream(), true);
+
+				while(true){
+					//if(!ready){
+						String input = in.readLine();
+						int x=4,y=4;
+						if(input.equals("up")) {
+							x--;
+						} else if(input.equals("down")) {
+							x++;
+						} else if(input.equals("left")) {
+							y--;
+						} else if(input.equals("right")) {
+							y++;
+						}
+						//int x=Integer.parseInt(input.substring(0,1));
+					//	int y=Integer.parseInt(input.substring(2, 3));
+						out.println(x+" "+y);
+				//	}
+				}
+			} catch(IOException e) {
+				System.out.println(e);
+			}
+			finally {
+				try {
+					socket.close();
+				} catch(IOException e) {
+
+				}
+			}
+
 		}
 	}
 }

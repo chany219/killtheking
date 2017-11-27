@@ -29,15 +29,17 @@ import Client.*;
 
 public class ChatClient {
 
-	BufferedReader in;
-	PrintWriter out;
+	BufferedReader in_chat;
+	PrintWriter out_chat;
+
+
 	JFrame frame = new JFrame("KILL THE KING");
 	LoginScreen frame2 = new LoginScreen("KILL THE KING");
 	JPanel EntirePanel = new JPanel();
 	JPanel leftPanel = new JPanel();
 	JPanel chatPanel= new JPanel();
-	JPanel buttonPanel =new ButtonPanel();
-	JPanel MatrixPanel=new Matix_Graphic();
+	static JPanel buttonPanel =new ButtonPanel();
+	static JPanel MatrixPanel=new Matix_Graphic();
 	JTextField textField = new JTextField(35);
 	JTextArea messageArea = new JTextArea(20, 35);
 
@@ -65,11 +67,11 @@ public class ChatClient {
 
 		frame.getContentPane().add(EntirePanel);
 		frame.pack();
-
+		
 		textField.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				out.println(textField.getText());
+				out_chat.println(textField.getText());
 				textField.setText("");
 			}
 		});
@@ -95,31 +97,57 @@ public class ChatClient {
 
 		// Make connection and initialize streams
 		String serverAddress = getServerAddress();
-		Socket socket = new Socket(serverAddress, 9001);
-		in = new BufferedReader(new InputStreamReader(
-				socket.getInputStream()));
-		out = new PrintWriter(socket.getOutputStream(), true);
-
+		
+		Socket socket1 = new Socket(serverAddress, 9001);
+		in_chat = new BufferedReader(new InputStreamReader(socket1.getInputStream()));
+		out_chat = new PrintWriter(socket1.getOutputStream(), true);
+		
 		// Process all messages from server, according to the protocol.
 		while (true) {
-			String line = in.readLine();
+			String line = in_chat.readLine();
 			if (line.startsWith("SUBMITNAME")) {
-				out.println(getName());
+				out_chat.println(getName());
 				frame2.setVisible(false);
 			} else if (line.startsWith("NAMEACCEPTED")) {
 				textField.setEditable(true);
 			} else if (line.startsWith("MESSAGE")) {
 				messageArea.append(line.substring(8) + "\n");
-			}
+			} 
 		}
 	}
 
+	public static class moving extends Thread{
+		BufferedReader in_button;
+		PrintWriter out_button;
+	public void run() {
+		try {
+			Socket socket2 = new Socket("localhost",9002);
+			in_button = new BufferedReader(new InputStreamReader(socket2.getInputStream()));
+			out_button = new PrintWriter(socket2.getOutputStream(), true);
+		while(true) {
+			if(!ButtonPanel.flag) {
+				out_button.println(ButtonPanel.direction);
+			String line2=in_button.readLine();
+			System.out.println(line2);
+			int i=Integer.parseInt(line2.substring(0,1));
+			int j=Integer.parseInt(line2.substring(2,3));
+			((Matix_Graphic) MatrixPanel).moving(i,j);
+		
+			}
+		}
+		} catch(IOException E) {
+			
+		}
+	}
+	}
 	public static void main(String[] args) throws Exception {
 		ChatClient client = new ChatClient();
+		
 		client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		client.frame.setLocation(600, 200);
 		client.frame.setSize(1050,600);
 		client.frame.setVisible(true);
+		new moving().start();
 		client.run();
 	}
 }
