@@ -67,7 +67,7 @@ public class ChatClient {
 
 		frame.getContentPane().add(EntirePanel);
 		frame.pack();
-		
+
 		textField.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
@@ -97,11 +97,11 @@ public class ChatClient {
 
 		// Make connection and initialize streams
 		String serverAddress = getServerAddress();
-		
+
 		Socket socket1 = new Socket(serverAddress, 9001);
 		in_chat = new BufferedReader(new InputStreamReader(socket1.getInputStream()));
 		out_chat = new PrintWriter(socket1.getOutputStream(), true);
-		
+
 		// Process all messages from server, according to the protocol.
 		while (true) {
 			String line = in_chat.readLine();
@@ -119,30 +119,45 @@ public class ChatClient {
 	public static class moving extends Thread{
 		BufferedReader in_button;
 		PrintWriter out_button;
-	public void run() {
-		try {
-			Socket socket2 = new Socket("localhost",9002);
-			in_button = new BufferedReader(new InputStreamReader(socket2.getInputStream()));
-			out_button = new PrintWriter(socket2.getOutputStream(), true);
-		while(true) {
-			if(!ButtonPanel.flag) {
-				out_button.println(ButtonPanel.direction);
-			String line2=in_button.readLine();
-			System.out.println(line2);
-			int i=Integer.parseInt(line2.substring(0,1));
-			int j=Integer.parseInt(line2.substring(2,3));
-			((Matix_Graphic) MatrixPanel).moving(i,j);
+		int prev_i, prev_j;
 		
+		public void run() {
+			try {
+				Socket socket2 = new Socket("localhost",9002);
+				in_button = new BufferedReader(new InputStreamReader(socket2.getInputStream()));
+				out_button = new PrintWriter(socket2.getOutputStream(), true);
+				while(true) {
+					if(Matix_Graphic.flag) {
+						out_button.println(Matix_Graphic.first_position);
+						String line2=in_button.readLine();
+						int i=Integer.parseInt(line2.substring(0,1));
+						int j=Integer.parseInt(line2.substring(2,3));
+						System.out.println(i+" "+j);
+						prev_i=i;
+						prev_j=j;
+						((Matix_Graphic) MatrixPanel).Moving("king", i,j);
+						break;
+					}
+				}
+				while(true) {
+					if(!ButtonPanel.flag) {
+						out_button.println(ButtonPanel.direction);
+						String line2=in_button.readLine();
+						int i=Integer.parseInt(line2.substring(0,1));
+						int j=Integer.parseInt(line2.substring(2,3));
+						((Matix_Graphic) MatrixPanel).Moving("king",i,j,prev_i,prev_j);
+						prev_i=i; prev_j=j;
+						ButtonPanel.flag=true;
+					}
+				}
+			} catch(IOException E) {
+
 			}
 		}
-		} catch(IOException E) {
-			
-		}
-	}
 	}
 	public static void main(String[] args) throws Exception {
 		ChatClient client = new ChatClient();
-		
+
 		client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		client.frame.setLocation(600, 200);
 		client.frame.setSize(1050,600);
