@@ -152,14 +152,25 @@ public class ChatServer {
 
 			try {
 
+				int x=0 ,y=0;
+				boolean flag1=true;
+				boolean flag2=true;
 				in = new BufferedReader(new InputStreamReader(
 						socket.getInputStream()));
 				out = new PrintWriter(socket.getOutputStream(), true);
 
 				while(true){
 					//if(!ready){
-						String input = in.readLine();
-						int x=4,y=4;
+					String input = in.readLine();
+					if(flag1)
+					{
+						x=Integer.parseInt(input.substring(0,1));
+						y=Integer.parseInt(input.substring(2,3));
+						flag1=false;
+						out.println(x+" "+y);
+					}
+					else if(flag2)
+					{
 						if(input.equals("up")) {
 							x--;
 						} else if(input.equals("down")) {
@@ -169,10 +180,12 @@ public class ChatServer {
 						} else if(input.equals("right")) {
 							y++;
 						}
-						//int x=Integer.parseInt(input.substring(0,1));
+					//int x=Integer.parseInt(input.substring(0,1));
 					//	int y=Integer.parseInt(input.substring(2, 3));
-						out.println(x+" "+y);
-				//	}
+					//flag2=false;
+					out.println(x+" "+y);
+					}
+					//	}
 				}
 			} catch(IOException e) {
 				System.out.println(e);
