@@ -13,7 +13,7 @@ public class ButtonPanel extends JPanel  {
 
 	public static boolean flag=true;
 	public static String direction;
-	
+
 	Button []btn=new Button[6];
 	ButtonPanel(){
 		setOpaque(false);
@@ -41,7 +41,7 @@ public class ButtonPanel extends JPanel  {
 				if(flag)
 				{
 					btn[1].setBackground(Color.WHITE);
-				
+
 					direction="up";
 					flag=false;
 				}
@@ -86,7 +86,8 @@ public class ButtonPanel extends JPanel  {
 		};
 		btn[5].addActionListener(btn5);
 	}
-	
 
 }
+
+
 
