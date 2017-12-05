@@ -12,19 +12,23 @@ public class ServerClass {
 
    private static final int PORT_CHAT = 9001;
    private static final int PORT_BUTTON = 9002;
-
-   //I use HashMap in order to manage many print writers for all the clients.
-   //The key value is print writers, and value is print writer's ID.
-   //It's easy to find certain print writers through the id.
    private static HashMap<PrintWriter,String> writers = new HashMap<PrintWriter,String>();
-
-   //role == 0 KING 1 SPY 2,3,4 CITIZEN 10 observers
-   public static HashMap<String,Integer>role =new HashMap<String,Integer>(); 
-
-
-
+   private static HashMap<String,Integer>role =new HashMap<String,Integer>(); 
+   private static HashMap<PrintWriter,Integer>ROLE =new HashMap<PrintWriter,Integer>();
+   private static String[] nameByRole = new String[5];
+   private static boolean[] ready ={false,false,false,false,false};
+   private static boolean[] isLive = {true,true,true,true,true};
+   private static boolean[] nowDead = {false,false,false,false,false};
+   private static boolean isFinish=false;
+   private static int[][] nowLocation = new int[5][2];
+   private static int[][] prevLocation = new int[5][2];
+   private static int turnNum;
+   private static int NUMBER=4;
+   private static int[][] status =new int[8][8];
+   private static boolean t=false;
+   private static int[] deadPosition =new int[2];
    public static void main(String[] args) throws Exception {
-      System.out.println("The chat server is running.");
+      System.out.println("THE GAME SERVER IS RUNNING.");
       ServerSocket listener1 = new ServerSocket(PORT_CHAT);
       ServerSocket listener2 = new ServerSocket(PORT_BUTTON);
       try {
@@ -43,7 +47,7 @@ public class ServerClass {
       private Socket socket;
       private BufferedReader in;
       private PrintWriter out;
-
+      private int roleNum;
 
       public Handler_chatting(Socket socket) {
          this.socket = socket;
@@ -51,15 +55,10 @@ public class ServerClass {
 
       public void run() {
          try {
-            // Create character streams for the socket.
             in = new BufferedReader(new InputStreamReader(
                   socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
-
-            // Request a name from this client.  Keep requesting until
-            // a name is submitted that is not already used.  Note that
-            // checking for the existence of a name and adding the name
-            // must be done while locking the set of names.
+            
             while (true) {
                out.println("SUBMITNAME");
                name = in.readLine();
@@ -73,75 +72,78 @@ public class ServerClass {
                }
             }
 
-            //Broadcast to all clients in the chatting room that new user enters.
             for (PrintWriter writer : writers.keySet()) {
                writer.println("MESSAGE "+"<" + name + "> enters our room("+(writers.size()+1)+"/5)");
             }
 
-            // Now that a successful name has been chosen, add the
-            // socket's print writer to the set of all writers so
-            // this client can receive broadcast messages.
             out.println("NAMEACCEPTED");
 
-            //Store the print writer and id in the HashMap.
             writers.put(out,name);
 
-            if(writers.size()<=5){
-               
+            if(writers.size()<=NUMBER){
+
                Random random = new Random();
                while(true) {
-                  int temp = (int)random.nextInt(5);
-                  
+                  int temp = (int)random.nextInt(NUMBER);
+
                   synchronized(role) {
                      if(!role.containsValue(temp)) {
                         role.put(name,temp);
+                     nameByRole[temp]="";
+                        nameByRole[temp]+=name;
+                        out.println(temp);
                         break;
                      }
                   }
                }
-}
-            // Accept messages from this client and broadcast them.
-            // Ignore other clients that cannot be broadcasted to.
+            }
             while (true) {
 
-               if(writers.size()==5) {
+               if(writers.size()==NUMBER) {
                   for(PrintWriter writer : writers.keySet()){
                      writer.println("GAMESTART");
                   }
                }
-
+            
                String input = in.readLine();
                if (input == null) {
                   return;
-               } else if(input.equals("GAMESTART")) {
-                  int roleNum=role.get(name);
-                  out.println(roleNum);
-                  if(roleNum==0){
-                     out.println("BROADCAST  You are the King. ");
-                  }
-                  else if(roleNum==1){
-                     out.println("BROADCAST  You are the Spy. ");
-                  }
-                  else
-                     out.println("BROADCAST  You are the Citizen. ");
-
+               } else if(input.equals("GAMESTARTACCEPTED")) {
+                  break;
                }
-               
+
                else
-                  //broadcast message to all clients in the chatting room
                   for (PrintWriter writer : writers.keySet()) 
                      writer.println("MESSAGE " + name + ": " + input);
+            }
+            roleNum=role.get(name);
+
+            if(roleNum==0){
+               out.println("BROADCAST  You are the King. ");
+            }
+            else if(roleNum==1){
+               out.println("BROADCAST  You are the Spy. ");
+            }
+            else
+               out.println("BROADCAST  You are the Citizen. ");
+
+            while(true) {
+               String input = in.readLine();
+               if (input == null) {
+                  return;
+               }
+               for (PrintWriter writer : writers.keySet()) 
+                  writer.println("MESSAGE " + name + ": " + input);
             }
 
          } catch (IOException e) {
             System.out.println(e);
          } finally {
-            // This client is going down!  Remove its name and its print
-            // writer from the sets, and close its socket.
             if (out != null) {
                writers.remove(out);
+               role.remove(name);
             }
-            //Broadcast to all clients in the chatting room that user exits.
+
             for (PrintWriter writer : writers.keySet()) {
                writer.println("MESSAGE "+"<" + name + "> exits from our room");
             }
@@ -157,54 +159,109 @@ public class ServerClass {
       private Socket socket;
       private BufferedReader in;
       private PrintWriter out;
-      public static boolean ready=true;
       public Handler_button(Socket socket) {
          this.socket = socket;
       }
       public void run() {
 
-
          try {
-
             int x=0 ,y=0;
-            boolean flag1=true;
-            boolean flag2=true;
-            in = new BufferedReader(new InputStreamReader(
-                  socket.getInputStream()));
+
+            String input;
+
+            for(int i=0;i<NUMBER;i++) {
+               System.out.println(nameByRole[i]);
+            }
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
-            while(true){
-               //if(!ready){
-               String input = in.readLine();
-               if(flag1)
-               {
-                  x=Integer.parseInt(input.substring(0,1));
-                  y=Integer.parseInt(input.substring(2,3));
-                  flag1=false;
-                  out.println(x+" "+y);
-               }
-               else if(flag2)
-               {
-                  if(input.equals("up")) {
-                     x--;
-                  } else if(input.equals("down")) {
-                     x++;
-                  } else if(input.equals("left")) {
-                     y--;
-                  } else if(input.equals("right")) {
-                     y++;
+            String line=in.readLine();
+            int tempNum=Integer.parseInt(line);
+            ROLE.put(out, tempNum);
+
+            while(true) {
+               input = in.readLine();
+               x=Integer.parseInt(input.substring(0,1));
+               y=Integer.parseInt(input.substring(2,3));
+               nowLocation[ROLE.get(out)][0]=x;
+               nowLocation[ROLE.get(out)][1]=y;
+               ready[ROLE.get(out)]=true;
+               if(ready[0]&&ready[1]&&ready[2]&&ready[3]) {
+                  for(int i=0;i<NUMBER;i++) 
+                     ready[i]=false;
+
+                  if(computeFirstLocation()) {
+
+                     turnNum++;
+                     firstStatus();
+                     System.out.println(displayStatus());
+
+                     for (PrintWriter writer : ROLE.keySet()){ 
+                        writer.println("VALID");
+                        if(ROLE.get(writer)==0) {
+                           String temp="";
+                           for(int k=0;k<NUMBER;k++) {
+                              temp+=nowLocation[k][0]+""+nowLocation[k][1]+" ";
+                           }
+                           writer.println(temp);
+
+                        }
+                     }
+
+                  } else {
+
+                     for (PrintWriter writer : ROLE.keySet()) 
+                        writer.println("INVALID");
                   }
-               //int x=Integer.parseInt(input.substring(0,1));
-               //   int y=Integer.parseInt(input.substring(2, 3));
-               //flag2=false;
-               out.println(x+" "+y);
                }
-               //   }
+               input =in.readLine();
+               if(input.equals("VALIDACCEPTED")){
+
+                  break;
+               }
+
+            }
+            while(true) {
+
+
+               String input2 = in.readLine();
+               System.out.println(input2);
+               prevLocation[ROLE.get(out)][0]=nowLocation[ROLE.get(out)][0];
+               prevLocation[ROLE.get(out)][1]=nowLocation[ROLE.get(out)][1];
+
+               ready[ROLE.get(out)]=true;
+               if(input2.equals("up")) {
+                  nowLocation[ROLE.get(out)][0]--;
+               } else if(input2.equals("down")) {
+                  nowLocation[ROLE.get(out)][0]++;
+               } else if(input2.equals("left")) {
+                  nowLocation[ROLE.get(out)][1]--;
+               } else if(input2.equals("right")) {
+                  nowLocation[ROLE.get(out)][1]++;
+               }
+               if(ready[0]&&ready[1]&&ready[2]&&ready[3]) {
+            
+                  statusUpdate();           
+                  System.out.println(displayStatus());
+                  computeMoveLocation();
+                  for(int i=0;i<NUMBER;i++) {
+                     if(isLive[i])
+                     ready[i]=false;
+                  }
+                  if(isFinish) {
+                     return;
+                  }
+               }
+               input2=in.readLine();
+
+
             }
          } catch(IOException e) {
             System.out.println(e);
          }
          finally {
+            if(out!=null)
+               ROLE.remove(out);
             try {
                socket.close();
             } catch(IOException e) {
@@ -212,6 +269,197 @@ public class ServerClass {
             }
          }
 
+      }
+
+      public boolean computeFirstLocation() {
+
+         for(int i=0;i<NUMBER-1;i++) {
+            for(int j=i+1;j<=NUMBER-1;j++) {
+               if(i==j)
+                  continue;
+               if(nowLocation[i][0]==nowLocation[j][0]&&nowLocation[i][1]==nowLocation[j][1]) {
+                  return false;
+               }
+            }
+         }
+         return true;
+      }
+
+      public void computeMoveLocation() {
+         for(int i=1;i<NUMBER;i++) {
+            if(!isLive[i])
+               continue;
+            if(nowLocation[0][0]==nowLocation[i][0]&&nowLocation[0][1]==nowLocation[i][1]) {
+               for (PrintWriter writer : ROLE.keySet()) 
+                  writer.println("CITIZENWIN");
+               isFinish=true;
+               return;
+
+            }
+         }
+      
+
+         String statusStr=stringToStatus();
+         System.out.println(statusStr);
+         for(int i=1;i<NUMBER-1;i++) {
+            for(int j=i+1;j<=NUMBER-1;j++) {
+               if(i==j||isLive[i]==false||isLive[j]==false)
+                  continue;
+               if(nowLocation[i][0]==nowLocation[j][0]&&nowLocation[i][1]==nowLocation[j][1]) {
+                  if(isLive[i]) {
+                     for (PrintWriter writer : ROLE.keySet()) {
+                        if(i==ROLE.get(writer)) {
+                           nowDead[i]=true;
+                           deadPosition[0]=nowLocation[i][0];
+                           deadPosition[1]=nowLocation[i][1];
+                           break;
+                        }
+                     }
+                     isLive[i]=false;
+                  }
+                  if(isLive[j]) {
+                     for (PrintWriter writer : ROLE.keySet()) {
+                        if(j==ROLE.get(writer)) {
+                           nowDead[j]=true;
+                           break;
+                        }
+                     }
+                     isLive[j]=false;
+                  }
+               }
+            }
+         }
+         if(isLive[1]==false&&isLive[2]==false&&isLive[3]) {
+            for (PrintWriter writer : ROLE.keySet()) 
+               writer.println("KINGWIN");
+            isFinish=true;
+            return;
+         } 
+         String deadList="";
+         for(int i=0;i<NUMBER;i++) {
+            if(nowDead[i]) {
+               t=true;
+               break; 
+            }   
+         }
+         if(t) {
+            deadList+="ISDEAD ";
+         } else {
+            deadList+="NOTDEAD ";
+         }
+         for(int i=0;i<NUMBER;i++) {
+            if(nowDead[i])
+               deadList+=nameByRole[i]+" ";
+         }
+            deadList=deadList+"dead! /"+deadPosition[0]+deadPosition[1]+"/";
+         for(int i=0;i<NUMBER;i++) {
+            if(nowDead[i])
+               deadList+=i;
+         }
+         for (PrintWriter writer : ROLE.keySet()) {
+            writer.println(deadList);
+         }
+         System.out.println(deadList+"데드리스트");   
+         for (PrintWriter writer : ROLE.keySet()) {
+            if(nowDead[ROLE.get(writer)]) {
+                writer.println("DEAD");
+                     writer.println(statusStr);
+
+                    nowDead[ROLE.get(writer)]=false;
+               
+            }
+         }
+         String nowTemp="";
+         String prevTemp="";
+         for(int i=0;i<NUMBER;i++) {
+            if(isLive[i]) {
+               nowTemp+=nowLocation[i][0]+""+nowLocation[i][1]+" ";
+               prevTemp+=prevLocation[i][0]+""+prevLocation[i][1]+" ";
+            }
+         }
+         for(int i=0;i<NUMBER;i++) {
+            if(isLive[i]) {
+               nowTemp+=i+" ";
+            }
+         }
+         System.out.println();
+         for (PrintWriter writer : ROLE.keySet()) {
+            if(isLive[ROLE.get(writer)]&&nowDead[ROLE.get(writer)]==false)
+               writer.println("SAFE");
+            if(isLive[ROLE.get(writer)]&&ROLE.get(writer)!=0){
+               writer.println(nowLocation[ROLE.get(writer)][0]+""+nowLocation[ROLE.get(writer)][1]);
+            }
+            if(isLive[ROLE.get(writer)]==false)
+               writer.println("OBSERVER");
+            if(ROLE.get(writer)==0||isLive[ROLE.get(writer)]==false) {
+               if(nowDead[ROLE.get(writer)]==false)
+               writer.println(prevTemp+nowTemp);
+            }
+            if(nowDead[ROLE.get(writer)]) {
+                writer.println("DEAD");
+                     writer.println(statusStr);
+
+                    nowDead[ROLE.get(writer)]=false;
+               
+            }
+
+         }
+
+
+      }
+      public static void firstStatus() {
+         for(int i=0;i<8;i++) {
+            for(int j=0;j<8;j++) {
+               status[i][j]=5;
+            }
+         }
+         for(int i=0;i<NUMBER;i++) {
+            if(i==0) {
+               status[nowLocation[i][0]][nowLocation[i][1]]=i;      
+            } else if(isLive[i]) {
+               status[nowLocation[i][0]][nowLocation[i][1]]=i;
+            }
+         }
+      }
+      public static void statusUpdate() {
+         System.out.println("before nowLocation");
+         for(int i=0;i<NUMBER;i++) {
+            System.out.println(nowLocation[i][0]+" "+nowLocation[i][1]);
+         }
+         displayStatus();
+         for(int i=0;i<NUMBER;i++) {
+            if(i==0) {
+               status[prevLocation[i][0]][prevLocation[i][1]]=5;
+               status[nowLocation[i][0]][nowLocation[i][1]]=i;
+            }
+            else if(isLive[i]) {
+               status[prevLocation[i][0]][prevLocation[i][1]]=6;
+               status[nowLocation[i][0]][nowLocation[i][1]]=i;
+            }
+         }
+         displayStatus();
+      }
+      public static String stringToStatus() {
+         String temp="";
+
+         for(int i=0;i<8;i++)  {
+            for(int j=0;j<8;j++) {
+               temp+=status[i][j]+" ";
+            }
+         }
+         return temp;
+      }
+      public static String displayStatus() {
+
+         String dp="";
+
+         for(int i=0;i<8;i++) {
+            for(int j=0;j<8;j++) {
+               dp+=status[i][j]+" ";
+            }
+            dp+="\n";
+         }
+         return dp;
       }
    }
 }
