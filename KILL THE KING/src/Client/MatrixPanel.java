@@ -46,6 +46,12 @@ public class MatrixPanel extends JPanel {
 	Image tmp7=temp7.getScaledInstance(70, 70, ABORT);
 	ImageIcon image7=new ImageIcon(tmp7);
 	
+	ImageIcon orgimage8=new ImageIcon("spy.jpg");
+	Image temp8=orgimage8.getImage();
+	Image tmp8=temp8.getScaledInstance(60, 60, ABORT);
+	ImageIcon image8=new ImageIcon(tmp8);
+	
+	Color c=new Color(40,55,91);
 	JButton[][]bnt= new JButton[8][8];
 	Listener listener=new Listener();
 
@@ -59,7 +65,7 @@ public class MatrixPanel extends JPanel {
 				bnt[i][j]=new JButton(image);
 
 				add(bnt[i][j]);
-				bnt[i][j].setBackground(Color.WHITE);
+				bnt[i][j].setBackground(c);
 				bnt[i][j].addActionListener(listener);
 				bnt[i][j].setEnabled(false);
 			}
@@ -81,6 +87,11 @@ public class MatrixPanel extends JPanel {
 			bnt[i][j].setIcon(image2);
 			bnt[prev_i][prev_j].setIcon(image);
 		}
+		else if(role==1)
+		{
+			bnt[i][j].setIcon(image8);
+			bnt[prev_i][prev_j].setIcon(image3);
+		}
 		else
 		{
 			bnt[i][j].setIcon(image4);
@@ -91,9 +102,10 @@ public class MatrixPanel extends JPanel {
 
 		if(role==0)
 			bnt[i][j].setIcon(image2);
+		else if(role==1)
+			bnt[i][j].setIcon(image8);
 		else
 			bnt[i][j].setIcon(image4);
-
 	}
 
 	public void Observer(int i,int j,int x)
