@@ -141,14 +141,17 @@ public class ClientClass {
 			} else if (line.startsWith("GAMESTART")){
 				out_chat.println("GAMESTARTACCEPTED");
 				messageArea.append(broadcast+" GAME START! "+broadcast+"\n");
+				messageArea.setCaretPosition(messageArea.getDocument().getLength());
 				JOptionPane.showMessageDialog(frame, "GameStart!! Your role is "+role+". Select the first position","Message", JOptionPane.PLAIN_MESSAGE);
 				ready=true;
 				((MatrixPanel) matrixPanel).setEnabledMatrix(1);
 			} else if (line.startsWith("BROADCAST")){
 				messageArea.append(broadcast+line.substring(10)+broadcast+"\n");
+				messageArea.setCaretPosition(messageArea.getDocument().getLength());
 			}
 			else if (line.startsWith("MESSAGE")) {
 				messageArea.append(line.substring(8) + "\n");
+				messageArea.setCaretPosition(messageArea.getDocument().getLength());
 			} 
 		}
 	}
@@ -195,7 +198,10 @@ public class ClientClass {
 									int x=Integer.parseInt(tmp[k].substring(0,1));
 									int y=Integer.parseInt(tmp[k].substring(1,2));
 									status[x][y]=k;
-									((MatrixPanel) matrixPanel).Moving(k, x, y);
+									if(k==1)
+										((MatrixPanel) matrixPanel).Moving(2, x, y);
+									else
+										((MatrixPanel) matrixPanel).Moving(k, x, y);
 									if(k==0)
 									{
 										prev_i=x;
@@ -233,6 +239,7 @@ public class ClientClass {
 					if(!ButtonPanel.flag) {
 						if(status_check(roleNum))
 						{
+							//ButtonPanel.flag=true;
 							String str[];
 							int tmp1=-1, tmp2=-1, tmp3=-1, tmp4=-1;
 							System.out.println("나 들어왔어!!");
@@ -245,6 +252,7 @@ public class ClientClass {
 							if(line4.startsWith("KINGWIN"))
 							{
 								messageArea.append("All citizen dead. The winner of the game is king!!"+"\n");
+								messageArea.setCaretPosition(messageArea.getDocument().getLength());
 								if(roleNum==0||roleNum==1)
 									JOptionPane.showMessageDialog(matrixPanel, "Turn "+turnCount+" is finished. You are win!!","Message", JOptionPane.PLAIN_MESSAGE);
 								else
@@ -258,6 +266,7 @@ public class ClientClass {
 							else if(line4.startsWith("CITIZENWIN"))
 							{
 								messageArea.append("Citizen catches the king. The winner of the game is citizen!!"+"\n");
+								messageArea.setCaretPosition(messageArea.getDocument().getLength());
 								if(roleNum==0||roleNum==1)
 									JOptionPane.showMessageDialog(matrixPanel, "Turn "+turnCount+" is finished. You are lose!!","Message", JOptionPane.PLAIN_MESSAGE);
 								else
@@ -267,22 +276,87 @@ public class ClientClass {
 										((MatrixPanel) matrixPanel).Observer(k,l,8);
 								break;
 							}
-							else if(line4.startsWith("NOTDEAD"));
+							else if(line4.startsWith("NOTDEAD"))
+							{
+								String line3=in_button.readLine();
+								if(line3.startsWith("SAFE"))
+								{
+									JOptionPane.showMessageDialog(matrixPanel, "Turn "+turnCount+" is finished. KING is safe ! "
+											+ "Turn " + (turnCount+1)+" starts. Select the direction using button. ","Message", JOptionPane.PLAIN_MESSAGE);
+									turnCount++;
+									if(roleNum==0)
+									{
 
+										String temp=in_button.readLine();
+										System.out.println("왕이 받은거"+temp);
+										String tmp[]=temp.split(" ");
+										System.out.println("어레이길이"+tmp.length);
+										int length=(tmp.length/3);
+
+										for(int k=0;k<length;k++)
+										{
+											int temp_i=Integer.parseInt(tmp[k].substring(0,1));
+											int temp_j=Integer.parseInt(tmp[k].substring(1,2));
+											int i=Integer.parseInt(tmp[k+length].substring(0,1));
+											int j=Integer.parseInt(tmp[k+length].substring(1,2));
+											int r=Integer.parseInt(tmp[k+length+length].substring(0,1));
+											status_update(r,i,j,temp_i,temp_j);
+											if(r==1)
+												((MatrixPanel) matrixPanel).Moving(2,i,j,temp_i,temp_j);
+											else
+												((MatrixPanel) matrixPanel).Moving(r,i,j,temp_i,temp_j);
+											if(k==0)
+											{
+												prev_i=i; prev_j=j;
+											}
+											//((ButtonPanel) buttonPanel).setButtonBackground();
+										}
+										for(int k=0;k<8;k++)
+										{
+											for(int l=0;l<8;l++)
+											{
+												if(status[k][l]==tmp3||status[k][l]==tmp4)
+												{
+													((MatrixPanel) matrixPanel).Observer(k, l, 6);
+													status[k][l]=6;
+												}
+											}
+										}
+										ButtonPanel.flag=true;
+									}
+									else
+									{
+										String temp=in_button.readLine();
+										System.out.println("시민이 받은거"+temp);
+										int i=Integer.parseInt(temp.substring(0,1));
+										int j=Integer.parseInt(temp.substring(1,2));
+										status_update(i,j,prev_i,prev_j);
+										((MatrixPanel) matrixPanel).Moving(roleNum,i,j,prev_i,prev_j);
+										prev_i=i; prev_j=j;
+										//((ButtonPanel) buttonPanel).setButtonBackground();
+										ButtonPanel.flag=true;
+									}
+									out_button.println("SAFEACCEPTED");
+								}
+							}
 							else if(line4.startsWith("ISDEAD"))
 							{
+
 								str=line4.split("/");
 								tmp1=Integer.parseInt(str[1].substring(0,1));
 								tmp2=Integer.parseInt(str[1].substring(1,2));
 								tmp3=Integer.parseInt(str[2].substring(0,1));
 								tmp4=Integer.parseInt(str[2].substring(1,2));
 								messageArea.append(str[0].substring(6));
+								messageArea.setCaretPosition(messageArea.getDocument().getLength());
+								String line3=in_button.readLine();
+
 								if(roleNum==0)
 								{
 									status[tmp1][tmp2]=6;
 									((MatrixPanel) matrixPanel).Observer(tmp1,tmp2,7);
 								}
-								String line3=in_button.readLine();
+
 								System.out.println("sadasdasd");
 								System.out.println("line을 알려줘!"+line3);
 								//KINGWIN means king is win , and then game is over
@@ -336,7 +410,10 @@ public class ClientClass {
 											int j=Integer.parseInt(tmp[k+length].substring(1,2));
 											int r=Integer.parseInt(tmp[k+length+length].substring(0,1));
 											status_update(r,i,j,temp_i,temp_j);
-											((MatrixPanel) matrixPanel).Moving(r,i,j,temp_i,temp_j);
+											if(r==1)
+												((MatrixPanel) matrixPanel).Moving(2,i,j,temp_i,temp_j);
+											else
+												((MatrixPanel) matrixPanel).Moving(r,i,j,temp_i,temp_j);
 											if(k==0)
 											{
 												prev_i=i; prev_j=j;
@@ -370,36 +447,36 @@ public class ClientClass {
 									}
 									out_button.println("SAFEACCEPTED");
 								}
-								else if(line3.startsWith("OBSERVER"))
-								{
-									JOptionPane.showMessageDialog(matrixPanel, "Turn "+turnCount+" is finished. KING is safe ! "
-											+ "Turn " + (turnCount+1)+" starts. Select the direction using button. ","Message", JOptionPane.PLAIN_MESSAGE);
-									turnCount++;
-									String temp=in_button.readLine();
-									System.out.println("왕이 받은거"+temp);
-									String tmp[]=temp.split(" ");
-									System.out.println("어레이길이"+tmp.length);
-									int length=(tmp.length/3);
+							}
+							else if(line4.startsWith("OBSERVER"))
+							{
+								JOptionPane.showMessageDialog(matrixPanel, "Turn "+turnCount+" is finished. KING is safe ! "
+										+ "Turn " + (turnCount+1)+" starts. Select the direction using button. ","Message", JOptionPane.PLAIN_MESSAGE);
+								turnCount++;
+								String temp=in_button.readLine();
+								System.out.println("왕이 받은거"+temp);
+								String tmp[]=temp.split(" ");
+								System.out.println("어레이길이"+tmp.length);
+								int length=(tmp.length/3);
 
-									for(int k=0;k<length;k++)
+								for(int k=0;k<length;k++)
+								{
+									int temp_i=Integer.parseInt(tmp[k].substring(0,1));
+									int temp_j=Integer.parseInt(tmp[k].substring(1,2));
+									int i=Integer.parseInt(tmp[k+length].substring(0,1));
+									int j=Integer.parseInt(tmp[k+length].substring(1,2));
+									int r=Integer.parseInt(tmp[k+length+length].substring(0,1));
+									status_update(r,i,j,temp_i,temp_j);
+									((MatrixPanel) matrixPanel).Moving(r,i,j,temp_i,temp_j);
+									if(k==0)
 									{
-										int temp_i=Integer.parseInt(tmp[k].substring(0,1));
-										int temp_j=Integer.parseInt(tmp[k].substring(1,2));
-										int i=Integer.parseInt(tmp[k+length].substring(0,1));
-										int j=Integer.parseInt(tmp[k+length].substring(1,2));
-										int r=Integer.parseInt(tmp[k+length+length].substring(0,1));
-										status_update(r,i,j,temp_i,temp_j);
-										((MatrixPanel) matrixPanel).Moving(r,i,j,temp_i,temp_j);
-										if(k==0)
-										{
-											prev_i=i; prev_j=j;
-										}
-										//((ButtonPanel) buttonPanel).setButtonBackground();
+										prev_i=i; prev_j=j;
 									}
+									//((ButtonPanel) buttonPanel).setButtonBackground();
 								}
 							}
-							((ButtonPanel) buttonPanel).setButtonBackground();
 						}
+						((ButtonPanel) buttonPanel).setButtonBackground();
 					}
 				}
 			}catch(IOException E) {
