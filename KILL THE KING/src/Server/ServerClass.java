@@ -22,11 +22,12 @@ public class ServerClass {
    private static boolean isFinish=false;
    private static int[][] nowLocation = new int[5][2];
    private static int[][] prevLocation = new int[5][2];
-   private static int turnNum;
    private static int NUMBER=4;
+   private static int turnNum=0;
    private static int[][] status =new int[8][8];
    private static boolean t=false;
    private static int[] deadPosition =new int[2];
+   private static String[] turnStatus =new String[20];
    public static void main(String[] args) throws Exception {
       System.out.println("THE GAME SERVER IS RUNNING.");
       ServerSocket listener1 = new ServerSocket(PORT_CHAT);
@@ -58,7 +59,8 @@ public class ServerClass {
             in = new BufferedReader(new InputStreamReader(
                   socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
-            
+
+            out.println(writers.size());
             while (true) {
                out.println("SUBMITNAME");
                name = in.readLine();
@@ -73,7 +75,7 @@ public class ServerClass {
             }
 
             for (PrintWriter writer : writers.keySet()) {
-               writer.println("MESSAGE "+"<" + name + "> enters our room("+(writers.size()+1)+"/5)");
+               writer.println("MESSAGE "+"<" + name + "> enters our room("+(writers.size()+1)+"/4)");
             }
 
             out.println("NAMEACCEPTED");
@@ -89,7 +91,7 @@ public class ServerClass {
                   synchronized(role) {
                      if(!role.containsValue(temp)) {
                         role.put(name,temp);
-                     nameByRole[temp]="";
+                        nameByRole[temp]="";
                         nameByRole[temp]+=name;
                         out.println(temp);
                         break;
@@ -104,7 +106,7 @@ public class ServerClass {
                      writer.println("GAMESTART");
                   }
                }
-            
+
                String input = in.readLine();
                if (input == null) {
                   return;
@@ -169,9 +171,10 @@ public class ServerClass {
 
             String input;
 
-            for(int i=0;i<NUMBER;i++) {
-               System.out.println(nameByRole[i]);
+            for(int i=0;i<20;i++) {
+               turnStatus[i]="";
             }
+         
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
@@ -192,10 +195,9 @@ public class ServerClass {
 
                   if(computeFirstLocation()) {
 
-                     turnNum++;
                      firstStatus();
-                     System.out.println(displayStatus());
-
+                     turnStatus[turnNum]+=stringToStatus();
+                     turnNum++;
                      for (PrintWriter writer : ROLE.keySet()){ 
                         writer.println("VALID");
                         if(ROLE.get(writer)==0) {
@@ -225,7 +227,8 @@ public class ServerClass {
 
 
                String input2 = in.readLine();
-               System.out.println(input2);
+               if(input2.startsWith("GAMEFINISH"))
+                  break;
                prevLocation[ROLE.get(out)][0]=nowLocation[ROLE.get(out)][0];
                prevLocation[ROLE.get(out)][1]=nowLocation[ROLE.get(out)][1];
 
@@ -240,22 +243,34 @@ public class ServerClass {
                   nowLocation[ROLE.get(out)][1]++;
                }
                if(ready[0]&&ready[1]&&ready[2]&&ready[3]) {
-            
+                  
                   statusUpdate();           
-                  System.out.println(displayStatus());
+                  
                   computeMoveLocation();
+                  turnStatus[turnNum]+=stringToStatus();
+                  turnNum++;
+                  
                   for(int i=0;i<NUMBER;i++) {
                      if(isLive[i])
-                     ready[i]=false;
+                        ready[i]=false;
                   }
-                  if(isFinish) {
-                     return;
-                  }
+            
                }
-               input2=in.readLine();
-
-
+         
+               String input3=in.readLine(); 
+               if(input3.startsWith("GAMEFINISH"))
+                  break;
             }
+            while(true) {
+               
+               String input2 = in.readLine();
+               if(input2.startsWith("REPLAY")){
+               int temp=Integer.parseInt(input2.substring(6));
+               out.println(turnStatus[temp]);
+               
+               }
+            }
+
          } catch(IOException e) {
             System.out.println(e);
          }
@@ -290,17 +305,21 @@ public class ServerClass {
             if(!isLive[i])
                continue;
             if(nowLocation[0][0]==nowLocation[i][0]&&nowLocation[0][1]==nowLocation[i][1]) {
+               status[nowLocation[0][0]][nowLocation[0][1]]=8;
                for (PrintWriter writer : ROLE.keySet()) 
                   writer.println("CITIZENWIN");
                isFinish=true;
                return;
-
             }
          }
-      
+         if(isKingLocked()){
+            isFinish=true;
+            for (PrintWriter writer : ROLE.keySet()) 
+               writer.println("CITIZENWIN-");
+            return;
+         }
 
          String statusStr=stringToStatus();
-         System.out.println(statusStr);
          for(int i=1;i<NUMBER-1;i++) {
             for(int j=i+1;j<=NUMBER-1;j++) {
                if(i==j||isLive[i]==false||isLive[j]==false)
@@ -312,6 +331,8 @@ public class ServerClass {
                            nowDead[i]=true;
                            deadPosition[0]=nowLocation[i][0];
                            deadPosition[1]=nowLocation[i][1];
+                           status[deadPosition[0]][deadPosition[1]]=7;
+
                            break;
                         }
                      }
@@ -329,12 +350,26 @@ public class ServerClass {
                }
             }
          }
-         if(isLive[1]==false&&isLive[2]==false&&isLive[3]) {
+         
+         if(nowLocation[1][0]==nowLocation[2][0]&&nowLocation[1][1]==nowLocation[2][1]&&nowLocation[3][0]==nowLocation[1][0]&&nowLocation[3][1]==nowLocation[3][1])
+         {
+            for (PrintWriter writer : ROLE.keySet()) 
+               writer.println("KINGWIN");
+            isFinish=true;
+            return;
+         }
+         if((isLive[2]==false&&isLive[3]==false)||(isLive[2]==false&&isLive[3]==false)) {
             for (PrintWriter writer : ROLE.keySet()) 
                writer.println("KINGWIN");
             isFinish=true;
             return;
          } 
+         if(turnNum==5) {
+            for (PrintWriter writer : ROLE.keySet()) 
+               writer.println("KINGWIN-");
+            isFinish=true;
+            return;
+         }
          String deadList="";
          for(int i=0;i<NUMBER;i++) {
             if(nowDead[i]) {
@@ -344,6 +379,7 @@ public class ServerClass {
          }
          if(t) {
             deadList+="ISDEAD ";
+            t=false;
          } else {
             deadList+="NOTDEAD ";
          }
@@ -351,24 +387,16 @@ public class ServerClass {
             if(nowDead[i])
                deadList+=nameByRole[i]+" ";
          }
-            deadList=deadList+"dead! /"+deadPosition[0]+deadPosition[1]+"/";
+         deadList=deadList+"dead! /"+deadPosition[0]+deadPosition[1]+"/";
          for(int i=0;i<NUMBER;i++) {
             if(nowDead[i])
                deadList+=i;
          }
          for (PrintWriter writer : ROLE.keySet()) {
-            writer.println(deadList);
+            if(isLive[ROLE.get(writer)]==true||nowDead[ROLE.get(writer)]==true)
+               writer.println(deadList);
          }
-         System.out.println(deadList+"데드리스트");   
-         for (PrintWriter writer : ROLE.keySet()) {
-            if(nowDead[ROLE.get(writer)]) {
-                writer.println("DEAD");
-                     writer.println(statusStr);
-
-                    nowDead[ROLE.get(writer)]=false;
-               
-            }
-         }
+      
          String nowTemp="";
          String prevTemp="";
          for(int i=0;i<NUMBER;i++) {
@@ -382,25 +410,25 @@ public class ServerClass {
                nowTemp+=i+" ";
             }
          }
-         System.out.println();
+         
          for (PrintWriter writer : ROLE.keySet()) {
             if(isLive[ROLE.get(writer)]&&nowDead[ROLE.get(writer)]==false)
                writer.println("SAFE");
             if(isLive[ROLE.get(writer)]&&ROLE.get(writer)!=0){
                writer.println(nowLocation[ROLE.get(writer)][0]+""+nowLocation[ROLE.get(writer)][1]);
             }
-            if(isLive[ROLE.get(writer)]==false)
+            if(isLive[ROLE.get(writer)]==false&&nowDead[ROLE.get(writer)]==false)
                writer.println("OBSERVER");
             if(ROLE.get(writer)==0||isLive[ROLE.get(writer)]==false) {
-               if(nowDead[ROLE.get(writer)]==false)
-               writer.println(prevTemp+nowTemp);
+               if(nowDead[ROLE.get(writer)]==false){
+                  writer.println(prevTemp+nowTemp);
+               }
             }
             if(nowDead[ROLE.get(writer)]) {
-                writer.println("DEAD");
-                     writer.println(statusStr);
-
-                    nowDead[ROLE.get(writer)]=false;
+               writer.println("DEAD");
+               writer.println(statusStr);
                
+               nowDead[ROLE.get(writer)]=false;
             }
 
          }
@@ -422,22 +450,22 @@ public class ServerClass {
          }
       }
       public static void statusUpdate() {
-         System.out.println("before nowLocation");
-         for(int i=0;i<NUMBER;i++) {
-            System.out.println(nowLocation[i][0]+" "+nowLocation[i][1]);
-         }
-         displayStatus();
+
+         
          for(int i=0;i<NUMBER;i++) {
             if(i==0) {
                status[prevLocation[i][0]][prevLocation[i][1]]=5;
                status[nowLocation[i][0]][nowLocation[i][1]]=i;
             }
             else if(isLive[i]) {
-               status[prevLocation[i][0]][prevLocation[i][1]]=6;
+               if(status[prevLocation[i][0]][prevLocation[i][1]]!=7||status[prevLocation[i][0]][prevLocation[i][1]]==i){
+                  status[prevLocation[i][0]][prevLocation[i][1]]=6;
+               }
                status[nowLocation[i][0]][nowLocation[i][1]]=i;
             }
          }
-         displayStatus();
+      
+   
       }
       public static String stringToStatus() {
          String temp="";
@@ -460,6 +488,28 @@ public class ServerClass {
             dp+="\n";
          }
          return dp;
+      }
+      public static boolean isKingLocked() {
+         boolean lock[]={false,false,false,false};
+         //upper
+         if(nowLocation[0][0]-1<0||status[nowLocation[0][0]-1][nowLocation[0][1]]!=5) {
+            lock[0]=true;
+         }
+         //down
+         if(nowLocation[0][1]+1>7||status[nowLocation[0][0]][nowLocation[0][1]+1]!=5) {
+            lock[1]=true;
+         }
+         //left
+         if(nowLocation[0][1]-1<0||status[nowLocation[0][0]][nowLocation[0][1]-1]!=5) {
+            lock[2]=true;
+         }
+         //right
+         if(nowLocation[0][1]+1>7||status[nowLocation[0][0]][nowLocation[0][1]+1]!=5) {
+            lock[3]=true;
+         }
+         if(lock[0]&&lock[1]&&lock[2]&&lock[3])
+            return true;
+         else return false;
       }
    }
 }
