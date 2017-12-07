@@ -18,7 +18,7 @@ public class MatrixPanel extends JPanel {
 
 	ImageIcon orgimage2=new ImageIcon("king.png");
 	Image temp2=orgimage2.getImage();
-	Image tmp2=temp2.getScaledInstance(70, 70, ABORT);
+	Image tmp2=temp2.getScaledInstance(75, 75, ABORT);
 	ImageIcon image2=new ImageIcon(tmp2);
 
 	ImageIcon orgimage3=new ImageIcon("ash.png");
@@ -46,9 +46,9 @@ public class MatrixPanel extends JPanel {
 	Image tmp7=temp7.getScaledInstance(70, 70, ABORT);
 	ImageIcon image7=new ImageIcon(tmp7);
 	
-	ImageIcon orgimage8=new ImageIcon("spy.jpg");
+	ImageIcon orgimage8=new ImageIcon("spy.png");
 	Image temp8=orgimage8.getImage();
-	Image tmp8=temp8.getScaledInstance(60, 60, ABORT);
+	Image tmp8=temp8.getScaledInstance(70, 70, ABORT);
 	ImageIcon image8=new ImageIcon(tmp8);
 	
 	Color c=new Color(40,55,91);
@@ -112,6 +112,8 @@ public class MatrixPanel extends JPanel {
 	{
 		if(x==0)
 			bnt[i][j].setIcon(image2);
+		if(x==1)
+			bnt[i][j].setIcon(image8);
 		else if(x==2||x==3||x==4)
 			bnt[i][j].setIcon(image4);
 		else if(x==5)
@@ -121,9 +123,9 @@ public class MatrixPanel extends JPanel {
 		else if(x==7)
 			bnt[i][j].setIcon(image5); 
 		else if(x==8)
-			bnt[i][j].setIcon(image6); // Ω√πŒ¿Ã ¿Ã∞Â¿ª ∂ß
+			bnt[i][j].setIcon(image6); // citizen win
 		else if(x==9)
-			bnt[i][j].setIcon(image7); // ø’¿Ã ¿Ã∞Â¿ª ∂ß
+			bnt[i][j].setIcon(image7); // king win
 	}
 
 	class Listener implements ActionListener{

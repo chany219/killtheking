@@ -77,17 +77,12 @@ public class LoginScreen extends JFrame {
 		contentPane.add(textField_1);
 		textField_1.setColumns(10);
 
-
-		//		System.out.println(id); System.out.println(pw);
-
 		JButton btnNewButton = new JButton("Enter");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				address=textField.getText();
 				name=textField_1.getText();
 				success=true;
-				//System.out.println(ClientClass.address);
-				//System.out.println(ClientClass.name);
 			}
 		});
 		btnNewButton.setBounds(847, 344, 117, 29);

@@ -13,18 +13,23 @@ public class ButtonPanel extends JPanel  {
 
 	public static boolean flag=true;
 	public static String direction;
+	public static boolean backreplayflag=true;
+	public static boolean forwardreplayflag=true;
 
 	Button []btn=new Button[6];
 	ButtonPanel(){
 		setOpaque(false);
 		setLayout(new GridLayout(2,3));
-		btn[0]=new Button(" ");
-		btn[1]=new Button("¡è");
-		btn[2]=new Button(" ");
-		btn[3]=new Button("¡ç");
-		btn[4]=new Button("¡é");
-		btn[5]=new Button("¡æ");
-
+		btn[0]=new Button("BACK");
+		btn[1]=new Button("¡ã");
+		btn[2]=new Button("GO");
+		btn[3]=new Button("¢¸");
+		btn[4]=new Button("¡å");
+		btn[5]=new Button("¢º");
+		
+		btn[0].setForeground(Color.BLUE);
+		btn[2].setForeground(Color.BLUE);
+		
 		for(int i=0;i<btn.length;i++)
 		{
 			add(btn[i]);
@@ -35,6 +40,19 @@ public class ButtonPanel extends JPanel  {
 				btn[i].setBackground(Color.GRAY);
 			btn[i].setEnabled(false);
 		}
+
+
+		ActionListener btn0=new ActionListener(){
+
+			public void actionPerformed(ActionEvent e){
+				if(backreplayflag)
+				{
+					btn[0].setBackground(Color.PINK);
+					backreplayflag=false;
+				}
+			}
+		};
+		btn[0].addActionListener(btn0);
 
 
 		ActionListener btn1=new ActionListener(){
@@ -50,6 +68,19 @@ public class ButtonPanel extends JPanel  {
 			}
 		};
 		btn[1].addActionListener(btn1);
+
+		ActionListener btn2=new ActionListener(){
+
+			public void actionPerformed(ActionEvent e){
+				if(forwardreplayflag)
+				{
+					btn[2].setBackground(Color.PINK);
+					forwardreplayflag=false;
+				}
+			}
+		};
+		btn[2].addActionListener(btn2);
+
 
 		ActionListener btn3=new ActionListener(){
 
@@ -91,17 +122,47 @@ public class ButtonPanel extends JPanel  {
 	public void setEnabledButton(int a)
 	{
 		for(int i=0;i<btn.length;i++)
+		{
 			if(a==1)
-			btn[i].setEnabled(true);
+			{
+				if(i!=0&&i!=2)
+					btn[i].setEnabled(true);
+			}
 			else
 				btn[i].setEnabled(false);
+		}
 	}
+
+	public void setReplayButton()
+	{
+		for(int i=0;i<btn.length;i++)
+			if(i==0||i==2)
+			{
+				btn[i].setEnabled(true);
+				btn[i].setBackground(Color.WHITE);
+			}
+			else
+			{
+				btn[i].setBackground(Color.WHITE);
+				btn[i].setEnabled(false);
+			}
+	}
+
 	public void setButtonBackground()
 	{
 		for(int i=0;i<btn.length;i++)
 		{
 			if(i!=0&&i!=2)
-				btn[i].setBackground(Color.WHITE);
+				btn[i].setBackground(Color.WHITE);			
+		}
+	}
+
+	public void setReplayButtonBackground()
+	{
+		for(int i=0;i<btn.length;i++)
+		{
+			if(i==0||i==2)
+				btn[i].setBackground(Color.WHITE);			
 		}
 	}
 }
