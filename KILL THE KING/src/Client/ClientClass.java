@@ -382,6 +382,7 @@ public class ClientClass {
 								tmp4 = Integer.parseInt(str[2].substring(1, 2));
 								messageArea.append(" *** " + str[0].substring(6) + " *** " + "\n");
 								messageArea.setCaretPosition(messageArea.getDocument().getLength());
+								turnCount++;
 								String line3 = in_button.readLine();
 
 								if (roleNum == 0) {
@@ -427,7 +428,7 @@ public class ClientClass {
 											"Turn " + turnCount + " is finished. KING is safe ! " + "Turn "
 													+ (turnCount + 1) + " starts. Select the direction using button. ",
 											"Message", JOptionPane.PLAIN_MESSAGE);
-									turnCount++;
+									
 									if (roleNum == 0) {
 
 										String temp = in_button.readLine();
@@ -542,6 +543,7 @@ public class ClientClass {
 							JOptionPane.showMessageDialog(matrixPanel, "This is last scene. ", "Message",
 									JOptionPane.WARNING_MESSAGE);
 						} else {
+							System.out.println("내 턴카운트"+turnCount);
 							replayCount++;
 
 							int k = 0;
