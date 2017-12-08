@@ -129,6 +129,10 @@ public class ServerClass {
             else
                out.println("BROADCAST  You are the Citizen. ");
 
+            if(roleNum==0) {
+               for (PrintWriter writer : writers.keySet()) 
+                  writer.println("BROADCAST "+name+ " is the King. Let's catch the king!!");
+            }
             while(true) {
                String input = in.readLine();
                if (input == null) {
