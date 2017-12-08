@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Image;
@@ -37,11 +38,11 @@ public class ClientClass {
 	JPanel EntirePanel = new JPanel();
 	JPanel leftPanel = new JPanel();
 	JPanel chatPanel = new JPanel();
-	static JTextField textField = new JTextField(35);
-	static JTextArea messageArea = new JTextArea(20, 35);
+	static JTextArea messageArea = new JTextArea(15,35);
+	static JTextField textField = new JTextField(15);
+
 	static JPanel buttonPanel = new ButtonPanel();
 	static JPanel matrixPanel = new MatrixPanel();
-
 	LoginScreen frame2 = new LoginScreen();
 	static int[][] status = new int[8][8];
 	public int roleNum;
@@ -50,6 +51,8 @@ public class ClientClass {
 	String Serveraddress;
 	String name;
 
+	Font f=new Font("고딕",Font.BOLD,12);
+	Font f2=new Font("고딕",Font.BOLD,15);
 	Color c1 = new Color(240, 25, 80); // 공지
 	Color c2 = new Color(220, 142, 44); // 일반
 
@@ -64,9 +67,14 @@ public class ClientClass {
 
 		// Layout GUI
 		// textField.setForeground(c2);
+		
+		textField.setFont(f);
+		messageArea.setFont(f2);
+		
 		textField.setEditable(false);
 		messageArea.setEditable(false);
 
+		//messageArea.set
 		chatPanel.setLayout(new BorderLayout());
 		chatPanel.add(textField, BorderLayout.CENTER);
 		chatPanel.add(new JScrollPane(messageArea), BorderLayout.NORTH);
@@ -543,7 +551,7 @@ public class ClientClass {
 							JOptionPane.showMessageDialog(matrixPanel, "This is last scene. ", "Message",
 									JOptionPane.WARNING_MESSAGE);
 						} else {
-							System.out.println("내 턴카운트"+turnCount);
+							
 							replayCount++;
 
 							int k = 0;

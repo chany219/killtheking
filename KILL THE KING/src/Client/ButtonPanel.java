@@ -16,16 +16,24 @@ public class ButtonPanel extends JPanel  {
 	public static boolean backreplayflag=true;
 	public static boolean forwardreplayflag=true;
 
-	Button []btn=new Button[6];
+	Button []btn=new Button[9];
 	ButtonPanel(){
 		setOpaque(false);
-		setLayout(new GridLayout(2,3));
+		setLayout(new GridLayout(3,3));
 		btn[0]=new Button("BACK");
 		btn[1]=new Button("¡ã");
 		btn[2]=new Button("GO");
 		btn[3]=new Button("¢¸");
-		btn[4]=new Button("¡å");
+		btn[4]=new Button("");
 		btn[5]=new Button("¢º");
+		btn[6]=new Button("");
+		btn[7]=new Button("¡å");
+		btn[8]=new Button("");
+		
+		btn[0].setVisible(false);
+		btn[2].setVisible(false);
+		btn[6].setVisible(false);
+		btn[8].setVisible(false);
 		
 		btn[0].setForeground(Color.BLUE);
 		btn[2].setForeground(Color.BLUE);
@@ -96,17 +104,6 @@ public class ButtonPanel extends JPanel  {
 
 		btn[3].addActionListener(btn3);
 
-		ActionListener btn4=new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				if(flag)
-				{
-					btn[4].setBackground(Color.YELLOW);
-					direction="down";
-					flag=false;
-				}
-			}
-		};
-		btn[4].addActionListener(btn4);
 		ActionListener btn5=new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				if(flag)
@@ -118,6 +115,19 @@ public class ButtonPanel extends JPanel  {
 			}
 		};
 		btn[5].addActionListener(btn5);
+		
+		ActionListener btn7=new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				if(flag)
+				{
+					btn[7].setBackground(Color.YELLOW);
+					direction="down";
+					flag=false;
+				}
+			}
+		};
+		
+		btn[7].addActionListener(btn7);
 	}
 	public void setEnabledButton(int a)
 	{
@@ -125,7 +135,7 @@ public class ButtonPanel extends JPanel  {
 		{
 			if(a==1)
 			{
-				if(i!=0&&i!=2)
+				if(i==1||i==3||i==5||i==7)
 					btn[i].setEnabled(true);
 			}
 			else
@@ -138,6 +148,7 @@ public class ButtonPanel extends JPanel  {
 		for(int i=0;i<btn.length;i++)
 			if(i==0||i==2)
 			{
+				btn[i].setVisible(true);
 				btn[i].setEnabled(true);
 				btn[i].setBackground(Color.WHITE);
 			}
