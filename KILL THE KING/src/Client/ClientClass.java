@@ -67,10 +67,10 @@ public class ClientClass {
 
 		// Layout GUI
 		// textField.setForeground(c2);
-		
+
 		textField.setFont(f);
 		messageArea.setFont(f2);
-		
+
 		textField.setEditable(false);
 		messageArea.setEditable(false);
 
@@ -99,6 +99,19 @@ public class ClientClass {
 		frame.setSize(1050, 600);
 		frame.setMinimumSize(new Dimension(1050, 600));
 
+		while (true) {
+			if (frame2.getSUCCESS()) {
+				Serveraddress = frame2.getAddress();
+				name = frame2.getName();
+				JOptionPane.showMessageDialog(frame2, "Login Success!! Welcome to Kill the king", "Message",
+						JOptionPane.PLAIN_MESSAGE);
+				frame2.setVisible(false);
+				frame.setVisible(true);
+				break;
+			}
+			System.out.println();
+		}
+
 		textField.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
@@ -118,25 +131,7 @@ public class ClientClass {
 		String broadcast = " *** ";
 
 		// Check the login
-		while (true) {
-			if (frame2.getSUCCESS()) {
-				int userCount = Integer.parseInt(in_chat.readLine());
-				if (userCount >= 4) {
-					JOptionPane.showMessageDialog(frame2, "GAME already starts!! You can't enter.", "Message",
-							JOptionPane.PLAIN_MESSAGE);
-					socket1.close();
-					System.exit(-1);
-				} else {
-					Serveraddress = frame2.getAddress();
-					name = frame2.getName();
-					JOptionPane.showMessageDialog(frame2, "Login Success!! Welcome to Kill the king", "Message",
-							JOptionPane.PLAIN_MESSAGE);
-					frame2.setVisible(false);
-					frame.setVisible(true);
-					break;
-				}
-			}
-		}
+
 		// Process all messages from server, according to the protocol.
 		while (true) {
 			String line = in_chat.readLine();
@@ -170,6 +165,7 @@ public class ClientClass {
 				messageArea.append(line.substring(8) + "\n");
 				messageArea.setCaretPosition(messageArea.getDocument().getLength());
 			}
+			System.out.println();
 		}
 	}
 
@@ -235,7 +231,7 @@ public class ClientClass {
 							JOptionPane.showMessageDialog(matrixPanel,
 									"All users select first Position. Turn " + turnCount + " Start."
 											+ "Select the direction using button.",
-									"Message", JOptionPane.PLAIN_MESSAGE);
+											"Message", JOptionPane.PLAIN_MESSAGE);
 							break;
 						}
 						// INValid means all client's first location is invalid
@@ -247,6 +243,7 @@ public class ClientClass {
 							MatrixPanel.flag = false;
 						}
 					}
+					System.out.println();
 				}
 				// Button action
 				while (true) {
@@ -256,7 +253,7 @@ public class ClientClass {
 							String str[];
 							int tmp1 = -1, tmp2 = -1, tmp3 = -1, tmp4 = -1;
 
-							if (roleNum != 10) {
+							if (roleNum < 10) {
 								out_button.println(ButtonPanel.direction);
 								JOptionPane.showMessageDialog(matrixPanel,
 										"Your selection is completed! Please wait for other users.", "Message",
@@ -274,7 +271,7 @@ public class ClientClass {
 											" *** Citizen don't catch the king until turn "+turnCount+". "
 													+ "The winner of game is king!! ***" + "\n");
 								messageArea.setCaretPosition(messageArea.getDocument().getLength());
-								if (roleNum == 0 || roleNum == 1)
+								if (roleNum == 0 || roleNum == 1||roleNum==11)
 									JOptionPane.showMessageDialog(matrixPanel,
 											"Turn " + turnCount + " is finished. You are win!!", "Message",
 											JOptionPane.PLAIN_MESSAGE);
@@ -286,6 +283,7 @@ public class ClientClass {
 									for (int l = 0; l < 8; l++)
 										((MatrixPanel) matrixPanel).Observer(k, l, 9);
 								((ButtonPanel) buttonPanel).setReplayButton();
+								textField.setEditable(true);
 								break;
 							}
 							// CITIZEN WIN means king is win , and then game is
@@ -294,14 +292,14 @@ public class ClientClass {
 								out_button.println("GAMEFINISH");
 								if (line4.equals("CITIZENWIN"))
 									messageArea
-											.append(" *** Citizen catches the king. The winner of the game is citizen!! ***"
-													+ "\n");
+									.append(" *** Citizen catches the king. The winner of the game is citizen!! ***"
+											+ "\n");
 								else
 									messageArea
-											.append(" *** The king is locked by Citizen. The winner of the game is citizen!! ***"
-													+ "\n");
+									.append(" *** The king is locked by Citizen. The winner of the game is citizen!! ***"
+											+ "\n");
 								messageArea.setCaretPosition(messageArea.getDocument().getLength());
-								if (roleNum == 0 || roleNum == 1)
+								if (roleNum == 0 || roleNum == 1||roleNum==11)
 									JOptionPane.showMessageDialog(matrixPanel,
 											"Turn " + turnCount + " is finished. You are lose!!", "Message",
 											JOptionPane.PLAIN_MESSAGE);
@@ -313,6 +311,7 @@ public class ClientClass {
 									for (int l = 0; l < 8; l++)
 										((MatrixPanel) matrixPanel).Observer(k, l, 8);
 								((ButtonPanel) buttonPanel).setReplayButton();
+								textField.setEditable(true);
 								break;
 							} else if (line4.startsWith("NOTDEAD")) {
 								String line3 = in_button.readLine();
@@ -320,7 +319,7 @@ public class ClientClass {
 									JOptionPane.showMessageDialog(matrixPanel,
 											"Turn " + turnCount + " is finished. KING is safe ! " + "Turn "
 													+ (turnCount + 1) + " starts. Select the direction using button. ",
-											"Message", JOptionPane.PLAIN_MESSAGE);
+													"Message", JOptionPane.PLAIN_MESSAGE);
 									turnCount++;
 									if (roleNum == 0) {
 
@@ -405,9 +404,9 @@ public class ClientClass {
 								if (line3.startsWith("DEAD")) {
 									JOptionPane.showMessageDialog(matrixPanel,
 											"Turn " + turnCount
-													+ " is finished. You are dead!! Now, you are an Observer",
+											+ " is finished. You are dead!! Now, you are an Observer",
 											"Message", JOptionPane.PLAIN_MESSAGE);
-									roleNum = 10;
+									roleNum += 10;
 									textField.setEditable(false);
 									((ButtonPanel) buttonPanel).setEnabledButton(0);
 									ButtonPanel.flag = false;
@@ -435,8 +434,8 @@ public class ClientClass {
 									JOptionPane.showMessageDialog(matrixPanel,
 											"Turn " + turnCount + " is finished. KING is safe ! " + "Turn "
 													+ (turnCount + 1) + " starts. Select the direction using button. ",
-											"Message", JOptionPane.PLAIN_MESSAGE);
-									
+													"Message", JOptionPane.PLAIN_MESSAGE);
+
 									if (roleNum == 0) {
 
 										String temp = in_button.readLine();
@@ -497,7 +496,7 @@ public class ClientClass {
 								JOptionPane.showMessageDialog(matrixPanel,
 										"Turn " + turnCount + " is finished. KING is safe ! " + "Turn "
 												+ (turnCount + 1) + " starts. Select the direction using button. ",
-										"Message", JOptionPane.PLAIN_MESSAGE);
+												"Message", JOptionPane.PLAIN_MESSAGE);
 								turnCount++;
 								String temp = in_button.readLine();
 								String tmp[] = temp.split(" ");
@@ -521,6 +520,7 @@ public class ClientClass {
 						}
 						((ButtonPanel) buttonPanel).setButtonBackground();
 					}
+					System.out.println();
 				}
 
 				while (true) {
@@ -551,7 +551,7 @@ public class ClientClass {
 							JOptionPane.showMessageDialog(matrixPanel, "This is last scene. ", "Message",
 									JOptionPane.WARNING_MESSAGE);
 						} else {
-							
+
 							replayCount++;
 
 							int k = 0;
@@ -570,6 +570,7 @@ public class ClientClass {
 						ButtonPanel.forwardreplayflag = true;
 						((ButtonPanel) buttonPanel).setReplayButtonBackground();
 					}
+					System.out.println();
 				}
 			} catch (IOException E) {
 
@@ -622,7 +623,7 @@ public class ClientClass {
 				break;
 			}
 
-			if (roleNum == 10)
+			if (roleNum >= 10)
 				return true;
 			if (tmpx > 7 || tmpx < 0 || tmpy > 7 || tmpy < 0) {
 				JOptionPane.showMessageDialog(matrixPanel, "You cannot go there. Choose again please ", "Message",
@@ -631,7 +632,7 @@ public class ClientClass {
 				return false;
 			} else if (roleNum == 0)
 				if (status[tmpx][tmpy] == 6 || status[tmpx][tmpy] == 1 || status[tmpx][tmpy] == 2
-						|| status[tmpx][tmpy] == 3) {
+				|| status[tmpx][tmpy] == 3) {
 					JOptionPane.showMessageDialog(matrixPanel, "You cannot go there. Choose again please ", "Message",
 							JOptionPane.WARNING_MESSAGE);
 					ButtonPanel.flag = true;
