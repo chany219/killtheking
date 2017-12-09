@@ -249,8 +249,8 @@ public class ServerClass {
                if(ready[0]&&ready[1]&&ready[2]&&ready[3]) {
                   
                   statusUpdate();           
-                  
                   computeMoveLocation();
+                  System.out.println(displayStatus());
                   turnStatus[turnNum]+=stringToStatus();
                   turnNum++;
                   
@@ -368,7 +368,7 @@ public class ServerClass {
             isFinish=true;
             return;
          } 
-         if(turnNum==5) {
+         if(turnNum==19) {
             for (PrintWriter writer : ROLE.keySet()) 
                writer.println("KINGWIN-");
             isFinish=true;
@@ -458,11 +458,13 @@ public class ServerClass {
          
          for(int i=0;i<NUMBER;i++) {
             if(i==0) {
+               if(status[prevLocation[i][0]][prevLocation[i][1]]!=7&&status[prevLocation[i][0]][prevLocation[i][1]]==i){
                status[prevLocation[i][0]][prevLocation[i][1]]=5;
+               }
                status[nowLocation[i][0]][nowLocation[i][1]]=i;
             }
             else if(isLive[i]) {
-               if(status[prevLocation[i][0]][prevLocation[i][1]]!=7||status[prevLocation[i][0]][prevLocation[i][1]]==i){
+               if(status[prevLocation[i][0]][prevLocation[i][1]]!=7&&status[prevLocation[i][0]][prevLocation[i][1]]==i){
                   status[prevLocation[i][0]][prevLocation[i][1]]=6;
                }
                status[nowLocation[i][0]][nowLocation[i][1]]=i;
@@ -500,7 +502,7 @@ public class ServerClass {
             lock[0]=true;
          }
          //down
-         if(nowLocation[0][1]+1>7||status[nowLocation[0][0]][nowLocation[0][1]+1]!=5) {
+         if(nowLocation[0][0]+1>7||status[nowLocation[0][0]+1][nowLocation[0][1]]!=5) {
             lock[1]=true;
          }
          //left
