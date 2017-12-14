@@ -38,15 +38,15 @@ public class ServerClass {
    private static boolean[] ready ={false,false,false,false,false};
    private static boolean[] isLive = {true,true,true,true,true};
    private static boolean[] nowDead = {false,false,false,false,false};
-   private static int[][] nowLocation = new int[5][2];
-   private static int[][] prevLocation = new int[5][2];
+   private static int[][] nowLocation = new int[4][2];
+   private static int[][] prevLocation = new int[4][2];
    private static int NUMBER=4;
    private static int turnNum=0;
    private static int[][] status =new int[8][8];
    private static boolean t=false;
    private static int[] deadPosition =new int[2];
    private static String[] turnStatus =new String[20];
-   
+
    /**
     * The application main method, which just listens on a port and 
     * spawns handler threads.
@@ -90,7 +90,7 @@ public class ServerClass {
          this.socket = socket;
       }
 
-      
+
       /**
        * Services this thread's client by repeatedly requesting a
        * screen name until a unique one has been submitted, then
@@ -100,7 +100,7 @@ public class ServerClass {
        */
       public void run() {
          try {
-            
+
             // Create character streams for the socket.
             in = new BufferedReader(new InputStreamReader(
                   socket.getInputStream()));
@@ -112,7 +112,7 @@ public class ServerClass {
             // a name is submitted that is not already used.  Note that
             // checking for the existence of a name and adding the name
             // must be done while locking the set of names.
-         
+
             while (true) {
                out.println("SUBMITNAME");
                name = in.readLine();
@@ -131,7 +131,7 @@ public class ServerClass {
             // socket's print writer to the set of all writers so
             // this client can receive broadcast messages.
             // broadcast message that the client entered this chat room.
-            
+
             for (PrintWriter writer : writers.keySet()) {
                writer.println("MESSAGE "+"<" + name + "> enters our room("+(writers.size()+1)+"/4)");
             }
@@ -185,7 +185,7 @@ public class ServerClass {
             }
             roleNum=role.get(name);
             //announce their role to each client 
-            
+
             if(roleNum==0){
                out.println("BROADCAST  You are the King. ");
             }
@@ -199,7 +199,7 @@ public class ServerClass {
                for (PrintWriter writer : writers.keySet()) 
                   writer.println("BROADCAST "+name+ " is the King. Let's catch the king!!");
             }
-            
+
             // after game starts, chat server receive string and broadcast chat contents.
             while(true) {
                String input = in.readLine();
@@ -306,17 +306,17 @@ public class ServerClass {
                         writer.println("INVALID");
                   }
                }
-                /**
-                 * server receive VALIDACCEPTED protocol, break while loop
-                 * and go to next turn.
-                 */
+               /**
+                * server receive VALIDACCEPTED protocol, break while loop
+                * and go to next turn.
+                */
                input =in.readLine();
                if(input.equals("VALIDACCEPTED")){
                   break;
                }
             }
             while(true) {
-               
+
                // receive string up/down/left/right and move that client's location
                String input2 = in.readLine();
                if(input2.startsWith("GAMEFINISH"))
@@ -338,18 +338,18 @@ public class ServerClass {
                 * update the status matrix, and Judge the win or loss of the game.
                 */
                if(ready[0]&&ready[1]&&ready[2]&&ready[3]) {
-                  
+
                   statusUpdate();           
                   computeMoveLocation();
                   System.out.println(displayStatus());
                   turnStatus[turnNum]+=stringToStatus();
                   turnNum++;
-                  
+
                   for(int i=0;i<NUMBER;i++) {
                      if(isLive[i])
                         ready[i]=false;
                   }
-            
+
                }
                /**
                 * server receive GAMEFINISH, break while loop 
@@ -360,12 +360,12 @@ public class ServerClass {
                   break;
             }
             while(true) {
-               
+
                String input2 = in.readLine();
                if(input2.startsWith("REPLAY")){
-               int temp=Integer.parseInt(input2.substring(6));
-               out.println(turnStatus[temp]);
-               
+                  int temp=Integer.parseInt(input2.substring(6));
+                  out.println(turnStatus[temp]);
+
                }
             }
 
@@ -406,7 +406,7 @@ public class ServerClass {
        *  Each turn, each client's movement is compared to determine the king's death,
        *  client's death, and turn over. 
        */
-      
+
       public void computeMoveLocation() {
          for(int i=1;i<NUMBER;i++) {
             if(!isLive[i])
@@ -458,11 +458,14 @@ public class ServerClass {
             }
          }
          // if all of citizen is dead, broadcast king's win
-         if(nowLocation[1][0]==nowLocation[2][0]&&nowLocation[1][1]==nowLocation[2][1]&&nowLocation[3][0]==nowLocation[1][0]&&nowLocation[3][1]==nowLocation[3][1])
-         {
-            for (PrintWriter writer : ROLE.keySet()) 
-               writer.println("KINGWIN");
-            return;
+         if(isLive[1]&&isLive[2]&&isLive[3]) {
+            if(nowLocation[1][0]==nowLocation[2][0]&&nowLocation[1][1]==nowLocation[2][1]&&nowLocation[3][0]==nowLocation[1][0]&&nowLocation[3][1]==nowLocation[3][1])
+            {
+               for (PrintWriter writer : ROLE.keySet()) 
+                  writer.println("KINGWIN");
+               return;
+            }
+
          }
          if((isLive[2]==false&&isLive[3]==false)||(isLive[2]==false&&isLive[3]==false)) {
             for (PrintWriter writer : ROLE.keySet()) 
@@ -501,7 +504,7 @@ public class ServerClass {
             if(isLive[ROLE.get(writer)]==true||nowDead[ROLE.get(writer)]==true)
                writer.println(deadList);
          }
-      
+
          String nowTemp="";
          String prevTemp="";
          for(int i=0;i<NUMBER;i++) {
@@ -535,16 +538,16 @@ public class ServerClass {
             if(nowDead[ROLE.get(writer)]) {
                writer.println("DEAD");
                writer.println(statusStr);
-               
+
                nowDead[ROLE.get(writer)]=false;
             }
 
          }
 
 
-         
-          // set matrix of status for each client's first location
-          
+
+         // set matrix of status for each client's first location
+
       }
       public static void firstStatus() {
          for(int i=0;i<8;i++) {
@@ -560,17 +563,17 @@ public class ServerClass {
             }
          }
       }
-      
+
       // after first turn
       // set matrix of status for each client's moved location
-      
+
       public static void statusUpdate() {
 
-         
+
          for(int i=0;i<NUMBER;i++) {
             if(i==0) {
                if(status[prevLocation[i][0]][prevLocation[i][1]]!=7&&status[prevLocation[i][0]][prevLocation[i][1]]==i){
-               status[prevLocation[i][0]][prevLocation[i][1]]=5;
+                  status[prevLocation[i][0]][prevLocation[i][1]]=5;
                }
                status[nowLocation[i][0]][nowLocation[i][1]]=i;
             }
@@ -581,7 +584,7 @@ public class ServerClass {
                status[nowLocation[i][0]][nowLocation[i][1]]=i;
             }
          }
-   
+
          // the present matrix information change to string for sending client 
       }
       public static String stringToStatus() {
