@@ -29,8 +29,11 @@ import java.awt.event.ActionListener;
 import java.net.URL;
 import java.awt.event.ActionEvent;
 
+/**
+ * This class creates a login Screen. 
+ * And it receives the information needed to log in, and sends it to the client class.
+ */
 public class LoginScreen extends JFrame {
-
 
 
 	private JPanel contentPane;
@@ -39,10 +42,19 @@ public class LoginScreen extends JFrame {
 
 	String address;
 	String name;
-    boolean success=false;
+	boolean success=false;
+
+
+
+	/**
+	 * Construct for GUI
+	 */
 	public LoginScreen() {
 
 
+		/**
+		 * Layout GUI
+		 */
 		setMinimumSize(new Dimension(1050, 600));
 		setTitle("Kill The King");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -87,7 +99,11 @@ public class LoginScreen extends JFrame {
 		});
 		btnNewButton.setBounds(847, 344, 117, 29);
 		contentPane.add(btnNewButton);
-		
+
+
+		/**
+		 * Set the login Screen Image
+		 */
 		JLabel label = new JLabel("");
 		Image img= new ImageIcon("loginImage.png").getImage();
 		label.setIcon(new ImageIcon(img));
@@ -95,16 +111,28 @@ public class LoginScreen extends JFrame {
 		contentPane.add(label);
 
 	}
+
+	/**
+	 * Send address to Client class
+	 */
 	public String getAddress()
 	{
 		return address;
 	}
 
+
+	/**
+	 * Send Nickname to Client class
+	 */
 	public String getName()
 	{
 		return name;
 	}
-	
+
+	/**
+	 * If the user press the Send button in login Screen,
+	 * "success" variable changes to true
+	 */
 	public boolean getSUCCESS()
 	{
 		return success;

@@ -7,10 +7,19 @@ import java.awt.event.ActionListener;
 
 import Client.*;
 
+
+/**
+ * This class creates a map in which the characters move and 
+ * displays the location of the characters received by the client on the map.
+ */
 public class MatrixPanel extends JPanel {
 
 	public static String first_position=""; 
 	public static boolean flag=false;
+	
+	/**
+	 * Set the image for each character and background
+	 */
 	ImageIcon orgimage=new ImageIcon("tree.png");
 	Image temp=orgimage.getImage();
 	Image tmp=temp.getScaledInstance(70, 70, ABORT);
@@ -55,6 +64,11 @@ public class MatrixPanel extends JPanel {
 	JButton[][]bnt= new JButton[8][8];
 	Listener listener=new Listener();
 
+	
+	/**
+	 * Constructor creates the 8 by 8 matrix
+	 * and set the background
+	 */
 	MatrixPanel(){
 		setOpaque(false);
 		setLayout(new GridLayout(8,8));
@@ -72,6 +86,9 @@ public class MatrixPanel extends JPanel {
 
 	}
 
+	/**
+     * This method control the matrix to be active or not
+     */
 	public void setEnabledMatrix(int a)
 	{
 		for(int i=0;i<8;i++)
@@ -81,6 +98,11 @@ public class MatrixPanel extends JPanel {
 				else
 					bnt[i][j].setEnabled(false);
 	}
+	
+	/**
+     * This method takes the image and location that should be represented in matrix
+     * from Client class and displays it in the matrix.
+     */
 	public void Moving(int role , int i,int j, int prev_i, int prev_j) {
 		if(role==0)
 		{
@@ -98,6 +120,10 @@ public class MatrixPanel extends JPanel {
 			bnt[prev_i][prev_j].setIcon(image3);
 		}
 	}
+	
+	/**
+	 * Overloading for Moving method
+	 */
 	public void Moving(int role, int i,int j) {
 
 		if(role==0)
@@ -108,6 +134,11 @@ public class MatrixPanel extends JPanel {
 			bnt[i][j].setIcon(image4);
 	}
 
+	/**
+	 * This method receives the position and image to represent.
+	 * Then set the image in certain position.
+	 * It is used for Observer.
+	 */
 	public void Observer(int i,int j,int x)
 	{
 		if(x==0)
@@ -128,6 +159,10 @@ public class MatrixPanel extends JPanel {
 			bnt[i][j].setIcon(image7); // king win
 	}
 
+	/**
+	 * This action listener stores the character's first location that is selected by user.
+	 * Then Send it to Client class
+	 */
 	class Listener implements ActionListener{
 		public void actionPerformed(ActionEvent e)
 		{

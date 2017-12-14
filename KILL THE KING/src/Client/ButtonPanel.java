@@ -9,13 +9,27 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JPanel;
 
+/**
+ * ButtonPanel allows you to move characters over the matrix
+ * we use the JButton class.
+ */
+
 public class ButtonPanel extends JPanel  {
 
+	
+	/**
+     * These boolean variables allows you to press the
+     * button once per turn
+     */
 	public static boolean flag=true;
 	public static String direction;
 	public static boolean backreplayflag=true;
 	public static boolean forwardreplayflag=true;
 
+	
+	/**
+     * Create Button and constructor
+     */
 	Button []btn=new Button[9];
 	ButtonPanel(){
 		setOpaque(false);
@@ -38,6 +52,10 @@ public class ButtonPanel extends JPanel  {
 		btn[0].setForeground(Color.BLUE);
 		btn[2].setForeground(Color.BLUE);
 		
+		
+		/**
+	     * Button Action
+	     */
 		for(int i=0;i<btn.length;i++)
 		{
 			add(btn[i]);
@@ -129,6 +147,11 @@ public class ButtonPanel extends JPanel  {
 		
 		btn[7].addActionListener(btn7);
 	}
+	
+	
+	/**
+     * This method control the button to be active or not
+     */
 	public void setEnabledButton(int a)
 	{
 		for(int i=0;i<btn.length;i++)
@@ -143,6 +166,10 @@ public class ButtonPanel extends JPanel  {
 		}
 	}
 
+	
+	/**
+     * If the game is finished, this method activates the replay button
+     */
 	public void setReplayButton()
 	{
 		for(int i=0;i<btn.length;i++)
@@ -159,6 +186,11 @@ public class ButtonPanel extends JPanel  {
 			}
 	}
 
+	/**
+     * If Client selects the button then button color changes to yellow.
+     * And the turn is finished, this method changes 
+     * the color of the button to white. 
+     */
 	public void setButtonBackground()
 	{
 		for(int i=0;i<btn.length;i++)
@@ -168,6 +200,11 @@ public class ButtonPanel extends JPanel  {
 		}
 	}
 
+	/**
+     * If Client selects the replay button then button color changes to pink.
+     * And the turn is finished, this method changes 
+     * the color of the replay button to white. 
+     */
 	public void setReplayButtonBackground()
 	{
 		for(int i=0;i<btn.length;i++)

@@ -56,6 +56,9 @@ public class ClientClass {
 	Color c1 = new Color(240, 25, 80); // 공지
 	Color c2 = new Color(220, 142, 44); // 일반
 
+	/**
+	 * Constructor that creates Layout GUI
+	 */
 	public ClientClass() {
 
 		// Create the array that stores status of matrix
@@ -66,7 +69,6 @@ public class ClientClass {
 		frame2.setVisible(true);
 
 		// Layout GUI
-		// textField.setForeground(c2);
 
 		textField.setFont(f);
 		messageArea.setFont(f2);
@@ -99,6 +101,10 @@ public class ClientClass {
 		frame.setSize(1050, 600);
 		frame.setMinimumSize(new Dimension(1050, 600));
 
+
+		/**
+		 * If login success, close the login frame and show the main frame.
+		 */
 		while (true) {
 			if (frame2.getSUCCESS()) {
 				Serveraddress = frame2.getAddress();
@@ -113,7 +119,11 @@ public class ClientClass {
 		}
 
 		textField.addActionListener(new ActionListener() {
-
+			/**
+			 * Responds to pressing the enter key in the textfield by sending
+			 * the contents of the text field to the server.    Then clear
+			 * the text area in preparation for the next message.
+			 */
 			public void actionPerformed(ActionEvent e) {
 				out_chat.println(textField.getText());
 				textField.setText("");
@@ -169,15 +179,21 @@ public class ClientClass {
 		}
 	}
 
+	/**
+	 * We use thread for every button action independent to chat.
+	 * This thread stores the status of each user and sends all information about the server and
+	 * button actions through the socket.
+	 */
 	public static class moving extends Thread {
 		BufferedReader in_button;
 		PrintWriter out_button;
 		String serverAddress;
 
-		int roleNum;
-		int prev_i, prev_j;
-		int turnCount = 1;
-		int replayCount = -1;
+		int roleNum; // 0 : king / 1 : spy / 2,3 : citizen
+		int prev_i, prev_j; //store the previous position
+		int turnCount = 1; //store the number of turn
+		int replayCount = -1; //store the number of replay according to  forward or backward
+		int king_x, king_y; //temporarily store the first king's position
 
 		public moving(String serverAddress, int roleNum) {
 			this.roleNum = roleNum;
@@ -220,12 +236,17 @@ public class ClientClass {
 									}
 								}
 							} else {
+								String temp = in_button.readLine();
+								king_x=Integer.parseInt(temp.substring(0, 1));
+								king_y=Integer.parseInt(temp.substring(1, 2));
 								int i = Integer.parseInt(MatrixPanel.first_position.substring(0, 1));
 								int j = Integer.parseInt(MatrixPanel.first_position.substring(2, 3));
 								prev_i = i;
 								prev_j = j;
 								status[i][j] = roleNum;
 								((MatrixPanel) matrixPanel).Moving(roleNum, i, j);
+								((MatrixPanel) matrixPanel).Moving(0, king_x, king_y);
+
 							}
 							((ButtonPanel) buttonPanel).setEnabledButton(1);
 							JOptionPane.showMessageDialog(matrixPanel,
@@ -235,6 +256,7 @@ public class ClientClass {
 							break;
 						}
 						// INValid means all client's first location is invalid
+						// if client's first location is overlaped, we should select again. 
 						else if (line2.startsWith("INVALID")) {
 							out_button.println("INVALIDACCEPTED");
 							JOptionPane.showMessageDialog(matrixPanel, "Please select the position again.", "Message",
@@ -243,9 +265,14 @@ public class ClientClass {
 							MatrixPanel.flag = false;
 						}
 					}
-					System.out.println();
+					//System.out.println();
 				}
-				// Button action
+
+				/**
+				 *  In this while loop, client class sends to Server the information of button action, 
+				 *  then receives from Server the result of each turn. Then, according to the result
+				 *  Client actions in this loop.     
+				 */
 				while (true) {
 					if (!ButtonPanel.flag) {
 						if (status_check(roleNum)) {
@@ -253,14 +280,24 @@ public class ClientClass {
 							String str[];
 							int tmp1 = -1, tmp2 = -1, tmp3 = -1, tmp4 = -1;
 
+							//If client is dead, roleNum of him is larger than roleNum.
+							//So, it doesn't execute.
 							if (roleNum < 10) {
 								out_button.println(ButtonPanel.direction);
 								JOptionPane.showMessageDialog(matrixPanel,
 										"Your selection is completed! Please wait for other users.", "Message",
 										JOptionPane.PLAIN_MESSAGE);
+								if(turnCount==1)
+									if(roleNum!=0)
+										((MatrixPanel) matrixPanel).Observer(king_x, king_y, 5);
 							}
 
+							//Read from Server
 							String line4 = in_button.readLine();
+
+							/**
+							 *  KINGWIN means king is win , and then game is over.
+							 */
 							if (line4.startsWith("KINGWIN")) {
 								out_button.println("GAMEFINISH");
 								if (line4.equals("KINGWIN"))
@@ -286,8 +323,10 @@ public class ClientClass {
 								textField.setEditable(true);
 								break;
 							}
-							// CITIZEN WIN means king is win , and then game is
-							// over
+
+							/**
+							 * CITIZENWIN means citizen is win , and then game is over.
+							 */
 							else if (line4.startsWith("CITIZENWIN")) {
 								out_button.println("GAMEFINISH");
 								if (line4.equals("CITIZENWIN"))
@@ -313,6 +352,11 @@ public class ClientClass {
 								((ButtonPanel) buttonPanel).setReplayButton();
 								textField.setEditable(true);
 								break;
+
+								/**
+								 * NOTDEAD means nobody is dead. So game is continue.
+								 * The user whose role is king receives the others position information.
+								 */
 							} else if (line4.startsWith("NOTDEAD")) {
 								String line3 = in_button.readLine();
 								if (line3.startsWith("SAFE")) {
@@ -380,7 +424,14 @@ public class ClientClass {
 									}
 									out_button.println("SAFEACCEPTED");
 								}
-							} else if (line4.startsWith("ISDEAD")) {
+							}
+
+							/**
+							 * ISDEAD means someone is dead. So users who is dead receives additional message
+							 * that protocol name is dead. And users who is alive receives additional message
+							 * that protocol name is safe. 
+							 */
+							else if (line4.startsWith("ISDEAD")) {
 
 								str = line4.split("/");
 								tmp1 = Integer.parseInt(str[1].substring(0, 1));
@@ -397,10 +448,10 @@ public class ClientClass {
 									((MatrixPanel) matrixPanel).Observer(tmp1, tmp2, 7);
 								}
 
-								// KINGWIN means king is win , and then game is
-								// over
-								// DEAD means client received this message
-								// died.So they become observer.
+								/**
+								 *  KINGWIN means king is win , and then game is
+								 * over DEAD means client received this message died.So they become observer.
+								 */
 								if (line3.startsWith("DEAD")) {
 									JOptionPane.showMessageDialog(matrixPanel,
 											"Turn " + turnCount
@@ -428,8 +479,10 @@ public class ClientClass {
 									out_button.println("DEADACCEPTED");
 									out_button.println("DEADACCEPTED");
 								}
-								// SAFE means client received this message is
-								// safe. So next turn is progressed
+
+								/**
+								 *  SAFE means client received this message is safe. So next turn is progressed.
+								 */
 								else if (line3.startsWith("SAFE")) {
 									JOptionPane.showMessageDialog(matrixPanel,
 											"Turn " + turnCount + " is finished. KING is safe ! " + "Turn "
@@ -492,7 +545,12 @@ public class ClientClass {
 									}
 									out_button.println("SAFEACCEPTED");
 								}
-							} else if (line4.startsWith("OBSERVER")) {
+							}
+							/**
+							 * When clients who is dead become a observer. Observer receives the information that is same to 
+							 * information that king received. So observer can see the all client's position. 
+							 */
+							else if (line4.startsWith("OBSERVER")) {
 								JOptionPane.showMessageDialog(matrixPanel,
 										"Turn " + turnCount + " is finished. KING is safe ! " + "Turn "
 												+ (turnCount + 1) + " starts. Select the direction using button. ",
@@ -523,7 +581,14 @@ public class ClientClass {
 					System.out.println();
 				}
 
+
+				/**
+				 * This while loop performs task about replay. according to the replay count,
+				 * the client class sends to the server replay_count. Then, Server sends to client
+				 * the all client's position.  
+				 */
 				while (true) {
+					//Rewind
 					if (!ButtonPanel.backreplayflag) {
 						if (replayCount <= 0) {
 							JOptionPane.showMessageDialog(matrixPanel, "This is first scene. ", "Message",
@@ -545,7 +610,7 @@ public class ClientClass {
 						ButtonPanel.backreplayflag = true;
 						((ButtonPanel) buttonPanel).setReplayButtonBackground();
 					}
-
+					//Forward
 					if (!ButtonPanel.forwardreplayflag) {
 						if (turnCount == replayCount) {
 							JOptionPane.showMessageDialog(matrixPanel, "This is last scene. ", "Message",
@@ -570,18 +635,18 @@ public class ClientClass {
 						ButtonPanel.forwardreplayflag = true;
 						((ButtonPanel) buttonPanel).setReplayButtonBackground();
 					}
-					System.out.println();
+					//System.out.println();
 				}
 			} catch (IOException E) {
 
 			}
 		}
 
-		public void status_update(int role, int i, int j) {
-			status[i][j] = role;
-		}
 
-		// Update the status array
+
+		/**
+		 *  Update the status array
+		 */
 		public void status_update(int i, int j, int prev_i, int prev_j) {
 
 			status[i][j] = roleNum;
@@ -591,7 +656,16 @@ public class ClientClass {
 				status[prev_i][prev_j] = 6;
 		}
 
-		// Update the status array according to role
+		/** 
+		 * overloading
+		 */
+		public void status_update(int role, int i, int j) {
+			status[i][j] = role;
+		}
+
+		/**
+		 *  Update the status array according to role
+		 */
 		public void status_update(int a, int i, int j, int prev_i, int prev_j) {
 
 			if (a == 0) {
@@ -603,7 +677,10 @@ public class ClientClass {
 			}
 		}
 
-		// Check the selected position is valid or not
+
+		/**
+		 *  Check the selected position is valid or not
+		 */
 		public boolean status_check(int roleNum) {
 			int tmpx = prev_i;
 			int tmpy = prev_j;
@@ -625,11 +702,15 @@ public class ClientClass {
 
 			if (roleNum >= 10)
 				return true;
+			
+			//If the position that wants to move next is wall
 			if (tmpx > 7 || tmpx < 0 || tmpy > 7 || tmpy < 0) {
 				JOptionPane.showMessageDialog(matrixPanel, "You cannot go there. Choose again please ", "Message",
 						JOptionPane.WARNING_MESSAGE);
 				ButtonPanel.flag = true;
 				return false;
+				
+				//If the position that wants to move next is ash
 			} else if (roleNum == 0)
 				if (status[tmpx][tmpy] == 6 || status[tmpx][tmpy] == 1 || status[tmpx][tmpy] == 2
 				|| status[tmpx][tmpy] == 3) {
@@ -641,6 +722,8 @@ public class ClientClass {
 			return true;
 		}
 	}
+
+
 
 	public static void main(String[] args) throws Exception {
 		ClientClass client = new ClientClass();
